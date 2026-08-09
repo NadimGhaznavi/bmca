@@ -216,3 +216,18 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# bmca secrets, runtime state, and generated backup/ceremony artifacts
+*password*
+*passphrase*
+*.key
+*.pem
+*.p12
+*.pfx
+*.jwk
+*_ca_key
+*.tar
+*.tar.gpg
+*.sha256
+offline/
+ceremony/
+backups
