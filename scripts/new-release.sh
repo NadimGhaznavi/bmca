@@ -2,22 +2,22 @@
 # Create and publish a Bear & Moose CA release.
 #
 # Flow: feature -> dev -> release/vX.Y.Z -> main, then main -> dev.
-# VERSION records the source-tree version and must match the annotated vX.Y.Z
-# release tag. Each release also promotes the CHANGELOG.md Unreleased section
-# to a dated release section. This script does not package or copy CA state,
-# private keys, or other secrets.
+# conf/settings.cfg records the source-tree version and must match the annotated
+# vX.Y.Z release tag. Each release also promotes the CHANGELOG.md Unreleased
+# section to a dated release section. This script does not package or copy CA
+# state, private keys, or other secrets.
 
 set -Eeuo pipefail
 
-readonly PROJECT_NAME="Bear & Moose CA"
 readonly REMOTE="origin"
 readonly MAIN_BRANCH="main"
 readonly DEV_BRANCH="dev"
 readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 readonly PROJECT_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
-readonly VERSION_FILE="$PROJECT_DIR/VERSION"
+readonly SETTINGS_FILE="$PROJECT_DIR/conf/settings.cfg"
 
 CURRENT_BRANCH=""
+PROJECT_NAME=""
 NEW_VERSION=""
 RELEASE_MESSAGE=""
 NEXT_FEATURE_BRANCH=""
@@ -49,8 +49,8 @@ Example:
 
 The script must be run from a clean feat/* or feature/* branch. It fetches
 $REMOTE, validates the release refs, asks for confirmation, performs the
-release merges, updates VERSION and CHANGELOG.md, and atomically pushes main,
-dev, the release branch, and tag.
+release merges, updates conf/settings.cfg and CHANGELOG.md, and atomically
+pushes main, dev, the release branch, and tag.
 EOF
 }
 
@@ -99,13 +99,16 @@ preflight() {
         die "Working tree is not clean; commit or stash changes before releasing."
     }
 
-    [[ -f "$VERSION_FILE" ]] || die "VERSION is required for a release."
+    [[ -f "$SETTINGS_FILE" ]] || die "conf/settings.cfg is required for a release."
     local current_version
-    current_version=$(<"$VERSION_FILE")
+    PROJECT_NAME=$(sed -nE 's/^PROJECT_NAME="([^"]+)"$/\1/p' "$SETTINGS_FILE")
+    current_version=$(sed -nE 's/^PROJECT_VERSION="([^"]+)"$/\1/p' "$SETTINGS_FILE")
+    [[ -n "$PROJECT_NAME" ]] ||
+        die "PROJECT_NAME is missing or invalid in conf/settings.cfg."
     [[ "$current_version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z][0-9A-Za-z.-]*)?(\+[0-9A-Za-z][0-9A-Za-z.-]*)?$ ]] ||
-        die "VERSION does not contain a valid semantic version: $current_version"
+        die "PROJECT_VERSION in conf/settings.cfg is missing or invalid: $current_version"
     [[ "$current_version" != "$NEW_VERSION" ]] ||
-        die "VERSION is already $NEW_VERSION; choose a new release version."
+        die "PROJECT_VERSION is already $NEW_VERSION; choose a new release version."
 
     if git grep -I -n -E -- '-----BEGIN (ENCRYPTED |RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----' -- .; then
         die "A private-key PEM marker was found in tracked files; remove the secret before releasing."
@@ -197,9 +200,24 @@ update_changelog() {
 }
 
 update_project_version() {
-    printf '%s\n' "$NEW_VERSION" >"$VERSION_FILE"
-    git add -- VERSION
-    success "Updated VERSION to $NEW_VERSION."
+    local temp_file
+    temp_file=$(mktemp "$PROJECT_DIR/conf/.settings.cfg.XXXXXX")
+
+    if ! awk -v version="$NEW_VERSION" '
+        /^PROJECT_VERSION="[^"]+"$/ {
+            print "PROJECT_VERSION=\"" version "\""
+            next
+        }
+        { print }
+    ' "$SETTINGS_FILE" >"$temp_file"; then
+        rm -f -- "$temp_file"
+        die "Failed to update PROJECT_VERSION in conf/settings.cfg."
+    fi
+
+    chmod --reference="$SETTINGS_FILE" "$temp_file"
+    mv -- "$temp_file" "$SETTINGS_FILE"
+    git add -- conf/settings.cfg
+    success "Updated PROJECT_VERSION to $NEW_VERSION."
 }
 
 create_release() {
@@ -230,6 +248,7 @@ create_release() {
 
 main() {
     cd -- "$PROJECT_DIR"
+    if [[ ${1:-} == -h || ${1:-} == --help ]]; then usage; exit 0; fi
     validate_arguments "$@"
     preflight
     confirm_release
