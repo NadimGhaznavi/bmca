@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Release 0.2.1] - 2026-08-10 05:22 EDT
+
 ## [Release 0.2.0] - 2026-08-10 05:18 EDT
 
 - Website setup at https://bmca.osoyalce.com/
