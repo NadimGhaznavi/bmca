@@ -2,7 +2,14 @@
 set -Eeuo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 
-for script in "$ROOT"/scripts/*.sh "$ROOT"/scripts/lib/*.sh; do bash -n "$script"; done
+[[ -f "$ROOT/scripts/lib/common.sh" ]] || {
+    printf 'Required shell library is missing: scripts/lib/common.sh\n' >&2
+    exit 1
+}
+shopt -s nullglob
+scripts=("$ROOT"/scripts/*.sh "$ROOT"/scripts/lib/*.sh)
+((${#scripts[@]} > 0)) || { printf 'No shell scripts found.\n' >&2; exit 1; }
+for script in "${scripts[@]}"; do bash -n "$script"; done
 bash -n "$ROOT/conf/settings.cfg"
 # shellcheck source=/dev/null
 source "$ROOT/conf/settings.cfg"

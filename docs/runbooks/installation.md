@@ -9,6 +9,7 @@ release tag checked out at `/opt/dev/bmca`; do not deploy a feature branch.
 hostname -s
 cd /opt/dev/bmca
 git describe --tags --exact-match
+test -f scripts/lib/common.sh
 bash tests/test-static.sh
 /usr/bin/step version
 /usr/bin/step-ca version
@@ -17,6 +18,10 @@ bash tests/test-static.sh
 Expected Smallstep versions are recorded in `conf/settings.cfg`. Confirm the
 selected environment's CA name, address, and backup target there before
 continuing.
+
+If `scripts/lib/common.sh` is absent, stop: the checkout is incomplete and the
+management scripts cannot run. Fetch and check out a corrected release rather
+than copying individual scripts around the release process.
 
 ## 2. Verify the backup target
 
