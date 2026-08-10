@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Fixed a deployment bug with .gitignore and `lib`
+
+---
+
 ## [Release 0.1.1] - 2026-08-09 20:02 EDT
 
 - Initial release.
