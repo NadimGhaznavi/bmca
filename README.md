@@ -10,6 +10,10 @@ NFS stores encrypted backup archives only.
 
 ## Documentation
 
+Start with the [documentation roadmap](docs/README.md). It separates design and
+trust decisions from ordered operator runbooks and provides reading paths for
+development, production, routine operation, and recovery.
+
 Design documents explain why the CA is structured this way:
 
 - [Architecture and trust boundaries](docs/design/architecture.md)
