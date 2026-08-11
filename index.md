@@ -3,6 +3,7 @@ layout: home
 author_profile: true
 ---
 
+![BMCA Logo](/images/bmca-logo.png)
 
 `bmca` installs and operates a small private Certificate Authority built on
 Smallstep. Development runs on `sally` as `devca.osoyalce.com`; production runs
