@@ -117,27 +117,12 @@ analytics:
 
 # Site Author
 author:
-  name: "Nadim-Daniel"
+  name: "Sally Kolodny"
   avatar: # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio: "Human Bean"
+  bio: "Administrator"
   location: "Hamilton, ON"
-  email: "nghaznavi@gmail.com"
+  email: "sallykolodny@protonmail.com"
   links:
-    - label: "Website"
-      icon: "fas fa-fw fa-link"
-      url: "https://www.osoyalce.com"
-    - label: "Twitter"
-      icon: "fab fa-fw fa-twitter-square"
-      url: "https://x.com/NadimDGhaznavi"
-    - label: "Facebook"
-      icon: "fab fa-fw fa-facebook-square"
-      url: "https://www.facebook.com/nadim.ghaznavi"
-    - label: "GitHub"
-      icon: "fab fa-fw fa-github"
-      url: "https://github.com/NadimGhaznavi/"
-    - label: "Instagram"
-      icon: "fab fa-fw fa-instagram"
-      url: "https://www.instagram.com/nadimghaznavi/"
 
 # Site Footer
 footer:
@@ -160,7 +145,7 @@ footer:
     - label: "Instagram"
       icon: "fab fa-fw fa-instagram"
       # url:
-  since: "2013"
+  since: "2026"
 
 # Reading Files
 include:
