@@ -27,11 +27,11 @@ title_separator: "-"
 subtitle: # site tagline that appears below site title in masthead
 name: "Certificate Authority"
 description: ""
-url: https://bmca.osoyalce.com/ # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
+url: https://bmca.osoyalce.com/1 # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl: "/" # the subpath of your site, e.g. "/blog"
 repository: NadimGhaznavi/bmca # GitHub username/repo-name e.g. "mmistakes/minimal-mistakes"
 teaser: # path of fallback teaser image, e.g. "/assets/images/500x300.png"
-logo: "/images/bmca_logo.png" # /images/banner.png # path of logo image to display in the masthead, e.g. "/assets/images/88x88.png"
+logo: "/images/bmca-logo.png"
 masthead_title: # overrides the website title displayed in the masthead, use " " for no title
 breadcrumbs: # true, false (default)
 words_per_minute: 200
@@ -117,11 +117,11 @@ analytics:
 
 # Site Author
 author:
-  name: "Sally Kolodny"
+  name: "Nadim-Daniel Ghaznavi"
   avatar: # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
   bio: "Administrator"
   location: "Hamilton, ON"
-  email: "sallykolodny@protonmail.com"
+  email: "nghaznavi@gmail.com"
   links:
 
 # Site Footer
