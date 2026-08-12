@@ -1,5 +1,5 @@
 ---
-Title: Legacy Docs
+Title: Docs
 Layout: Default
 ---
 
