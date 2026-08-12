@@ -1,3 +1,8 @@
+---
+Title: Docs
+Layout: Default
+---
+
 # Bear & Moose CA documentation roadmap
 
 This is the starting point for designing, deploying, and operating bmca. Read
