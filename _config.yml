@@ -15,7 +15,7 @@ remote_theme: "NadimGhaznavi/minimal-mistakes"
 #remote_theme: "mmistakes/minimal-mistakes"
 
 # "air", "aqua", "contrast", "dark", "dirt", "neon", "mint", "plum", "sunrise"
-minimal_mistakes_skin: "neon"
+minimal_mistakes_skin: "plum"
 #minimal_mistakes_skin: "sunrise"
 #minimal_mistakes_skin: "air"
 
