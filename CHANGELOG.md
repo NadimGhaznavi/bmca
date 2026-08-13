@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Release 0.2.27] - 2026-08-13 05:35 EDT
+
+- Make site logo's background transparent
+
+---
+
 ## [Release 0.2.25] - 2026-08-13 04:45 EDT
 
 - Change theme to dark
