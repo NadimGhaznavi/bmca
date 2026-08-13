@@ -9,6 +9,11 @@ usage() { printf 'Usage: %s --environment dev|prod\n' "$(basename "$0")"; }
 
 main() {
     local environment=''
+    if (($# == 0)); then
+        usage >&2
+        exit 1
+    fi
+
     while (($#)); do
         case $1 in
             --environment) [[ $# -ge 2 ]] || die "Missing environment."; environment=$2; shift 2 ;;
