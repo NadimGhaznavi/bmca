@@ -9,7 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [Release 0.2.31] - 2026-08-15 06:22 EDT
+- Corrected site logo image path in `_config.yml`
+- Corrected the case of the GitHub *front-end-matter*
+
+---
 
 ## [Release 0.2.30] - 2026-08-15 06:18 EDT
 

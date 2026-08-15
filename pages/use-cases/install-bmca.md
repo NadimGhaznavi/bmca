@@ -1,6 +1,6 @@
 ---
-title: Install BMCA
-layout: Default
+Title: Install BMCA
+Layout: Default
 ---
 
 ![BMCA Logo](/images/bmca-logo.png)
