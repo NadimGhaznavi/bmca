@@ -1,3 +1,8 @@
+---
+title: Install BMCA
+layout: Default
+---
+
 ![BMCA Logo](/images/bmca-logo.png)
 
 # Clone the GitHub Repo
