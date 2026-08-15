@@ -1,6 +1,6 @@
 ---
-title: Use Cases
-layout: Default
+Title: Use Cases
+Layout: Default
 ---
 
 ![BMCA Logo](/pages/images/bmca-logo.png)
