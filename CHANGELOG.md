@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Release 0.2.30] - 2026-08-15 06:18 EDT
+
 - Fixed casing in front-end-matter for GitHub Markdown
 - Corrected site URL in _config.yml file
 
