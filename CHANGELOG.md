@@ -9,9 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Release 0.2.30] - 2026-08-15 06:18 EDT
+
+- Fixed casing in front-end-matter for GitHub Markdown
+- Corrected site URL in _config.yml file
+
+---
+
 ## [Release 0.2.29] - 2026-08-15 06:06 EDT
 
 - Added more detail in the docs about the Maria DB SSL setup
+
+---
 
 ## [Release 0.2.28] - 2026-08-15 05:57 EDT
 
