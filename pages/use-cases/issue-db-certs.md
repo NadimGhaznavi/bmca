@@ -191,11 +191,93 @@ openssl x509 -in "$CERTIFICATE" \
   -noout -serial -enddate -fingerprint -sha256
 ```
 
-After the service and client tests pass, remove transferred encrypted keys,
-leaf-password files, and unnecessary staging copies from both destination
-hosts. Never commit private keys or password files. Renewal currently requires
-issuing and deploying replacement certificates before expiration; revocation
-is not implemented in this release.
+### Remove temporary transfer material
+
+Do not begin cleanup until the MariaDB service has restarted successfully, the
+application has completed an mTLS connection, and the certificate details
+above have been recorded. The installed files under `/etc/mysql/tls` and
+`/etc/xmrpool/tls` are live service files and must remain in place.
+
+On the MariaDB host, first confirm that the installed files exist and that the
+private key has restrictive permissions:
+
+```sh
+sudo test -s /etc/mysql/tls/server.crt
+sudo test -s /etc/mysql/tls/server.key
+sudo test -s /etc/mysql/tls/root_ca.crt
+sudo test "$(stat -c '%a' /etc/mysql/tls/server.key)" = 600
+```
+
+Assuming the incoming files were placed in `/root/bmca-transfer`, remove only
+those transfer copies and the transferred leaf-password file:
+
+```sh
+DB_NAME="REPLACE_WITH_MARIADB_DNS_NAME"
+TRANSFER_DIR=/root/bmca-transfer
+test "$DB_NAME" != REPLACE_WITH_MARIADB_DNS_NAME
+sudo test "$TRANSFER_DIR" = /root/bmca-transfer
+sudo rm -f -- \
+  "$TRANSFER_DIR/$DB_NAME.crt" \
+  "$TRANSFER_DIR/$DB_NAME.key" \
+  "$TRANSFER_DIR/root_ca.crt" \
+  "$TRANSFER_DIR/intermediate_ca.crt" \
+  /root/.bmca-leaf
+sudo rmdir -- "$TRANSFER_DIR"
+```
+
+`rmdir` intentionally fails if the transfer directory contains anything else;
+inspect unexpected files instead of deleting the directory recursively.
+
+On the XMR Pool application host, verify the installed application identity,
+then remove its transfer copies:
+
+```sh
+sudo test -s /etc/xmrpool/tls/mariadb-client.crt
+sudo test -s /etc/xmrpool/tls/mariadb-client.key
+sudo test -s /etc/xmrpool/tls/root_ca.crt
+sudo test "$(stat -c '%a' /etc/xmrpool/tls/mariadb-client.key)" = 600
+
+TRANSFER_DIR=/root/bmca-transfer
+sudo test "$TRANSFER_DIR" = /root/bmca-transfer
+sudo rm -f -- \
+  "$TRANSFER_DIR/xmr-pool.crt" \
+  "$TRANSFER_DIR/xmr-pool.key" \
+  "$TRANSFER_DIR/root_ca.crt" \
+  /root/.bmca-leaf
+sudo rmdir -- "$TRANSFER_DIR"
+```
+
+Finally, on the CA host, remove the temporary leaf-key password and issued
+staging files after confirming that deployment records are complete:
+
+```sh
+DB_NAME="REPLACE_WITH_MARIADB_DNS_NAME"
+test "$DB_NAME" != REPLACE_WITH_MARIADB_DNS_NAME
+sudo rm -f -- \
+  "/root/bmca-issued/mariadb-server/$DB_NAME.crt" \
+  "/root/bmca-issued/mariadb-server/$DB_NAME.key" \
+  /root/bmca-issued/mariadb-client/xmr-pool.crt \
+  /root/bmca-issued/mariadb-client/xmr-pool.key \
+  /root/.bmca-leaf
+sudo rmdir -- \
+  /root/bmca-issued/mariadb-server \
+  /root/bmca-issued/mariadb-client
+```
+
+Keep `/root/.bmca`; it is the CA provisioner password, not temporary transfer
+material. Never commit a private key or password file, and never copy one into
+the documentation tree.
+
+### Renew the certificates
+
+Revocation is not implemented in this release. Before either certificate
+expires, repeat this procedure using new, empty staging directories, for
+example `/root/bmca-issued/mariadb-server-renewal` and
+`/root/bmca-issued/mariadb-client-renewal`. Verify and deploy both replacements,
+restart MariaDB and the application as needed, and repeat the mTLS test before
+removing the previous installed files or the renewal staging copies. Record the
+new serial numbers, expirations, and fingerprints so the active certificates
+are unambiguous.
 
 For administrator client certificates and additional issuance details, see the
 [certificate issuance procedure](../runbooks/certificate-issuance.md).
