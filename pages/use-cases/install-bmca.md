@@ -1,7 +1,7 @@
 ---
-Title: Install BMCA
+title: Install BMCA
 author_profile: true
-Layout: Default
+layout: single
 ---
 
 ![BMCA Logo](/pages/images/bmca-logo.png)
