@@ -1,7 +1,11 @@
 ---
-Title: Use Cases
-Layout: Default
+title: Use Cases
+layout: Default
 ---
+
+![BMCA Logo](/pages/images/bmca-logo.png)
+
+# Use Cases
 
 - [Install bmca](/pages/use-cases/install-bmca.html)
 - Provide TLS certificates for Web Services

@@ -1,6 +1,6 @@
 ---
-Title: Provide TLS certificates for MariaDB
-Layout: Default
+title: Provide TLS certificates for MariaDB
+layout: Default
 ---
 
 # Provide TLS certificates for MariaDB

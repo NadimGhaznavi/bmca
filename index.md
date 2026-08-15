@@ -3,7 +3,7 @@ layout: home
 author_profile: true
 ---
 
-![BMCA Logo](/images/bmca-logo.png)
+![BMCA Logo](/pages/images/bmca-logo.png)
 
 Supported [Use Cases](/pages/use-cases/index.html).
 
