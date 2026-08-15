@@ -1,5 +1,6 @@
 ---
 Title: Use Cases
+author_profile: true
 Layout: Default
 ---
 
