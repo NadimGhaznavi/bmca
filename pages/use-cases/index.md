@@ -7,9 +7,9 @@ Layout: Default
 
 # Use Cases
 
-- [Install bmca](/pages/use-cases/install-bmca.html)
+- [Install bmca](/pages/use-cases/install-bmca)
 - Provide TLS certificates for Web Services
-- [Provide TLS certificates for MariaDB](/pages/use-cases/issue-db-certs.html)
+- [Provide TLS certificates for MariaDB](/pages/use-cases/issue-db-certs)
 - Provide trusted client identities
 - Establish trust on application hosts
 - Support certificate lifecycle management
