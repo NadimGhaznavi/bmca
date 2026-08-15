@@ -1,5 +1,6 @@
 ---
 Title: Docs
+author_profile: true
 Layout: Default
 ---
 
