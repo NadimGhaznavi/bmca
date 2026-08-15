@@ -1,5 +1,6 @@
 ---
 Title: Provide TLS certificates for MariaDB
+author_profile: true
 Layout: Default
 ---
 

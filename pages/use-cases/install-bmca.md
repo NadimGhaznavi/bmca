@@ -1,5 +1,6 @@
 ---
 Title: Install BMCA
+author_profile: true
 Layout: Default
 ---
 
