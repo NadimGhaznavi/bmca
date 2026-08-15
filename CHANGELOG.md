@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Release 0.2.29] - 2026-08-15 06:06 EDT
+
+- Added more detail in the docs about the Maria DB SSL setup
+
 ## [Release 0.2.28] - 2026-08-15 05:57 EDT
 
 - Changed the default soure for the install to /root/bmca
