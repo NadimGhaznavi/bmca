@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Changed the default soure for the install to /root/bmca
 - Added an *Issue DB Certs* doc
+- Enhanced usage message for `scripts/new_release.sh`.
 
 ---
 
