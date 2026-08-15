@@ -3,6 +3,10 @@ Title: Provide TLS certificates for MariaDB
 Layout: Default
 ---
 
+![BMCA Logo](/pages/images/bmca-logo.png)
+
+---
+
 # Provide TLS certificates for MariaDB
 
 Use this procedure to issue and deploy a MariaDB server certificate and an XMR

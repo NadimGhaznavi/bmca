@@ -3,7 +3,7 @@ Title: Install BMCA
 Layout: Default
 ---
 
-![BMCA Logo](/images/bmca-logo.png)
+![BMCA Logo](/pages/images/bmca-logo.png)
 
 # Clone the GitHub Repo
 
