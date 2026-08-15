@@ -41,11 +41,29 @@ error()   { printf '%s[ERROR]%s %s\n' "$RED" "$NC" "$*" >&2; }
 die()     { error "$*"; exit 1; }
 
 usage() {
+    local example_version="0.1.0"
+    local example_message="Release v0.1.0"
+    local example_branch="feat/maint-0.1.1"
+
+    if [[ ${1:-} == current && -f "$SETTINGS_FILE" ]]; then
+        local current_version
+        current_version=$(sed -nE 's/^PROJECT_VERSION="([^"]+)"$/\1/p' "$SETTINGS_FILE")
+        if [[ "$current_version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            local major=${BASH_REMATCH[1]}
+            local minor=${BASH_REMATCH[2]}
+            local release_patch=$((10#${BASH_REMATCH[3]} + 1))
+            local maintenance_patch=$((release_patch + 1))
+            example_version="$major.$minor.$release_patch"
+            example_message="Release v$example_version"
+            example_branch="feat/maint-$major.$minor.$maintenance_patch"
+        fi
+    fi
+
     cat <<EOF
 Usage: $(basename -- "$0") <version> <release-message> <next-feature-branch>
 
 Example:
-  $(basename -- "$0") 0.1.0 "Bear & Moose CA 0.1.0" feat/backup-restore
+  $(basename -- "$0") $example_version "$example_message" $example_branch
 
 The script must be run from a clean feat/* or feature/* branch. It fetches
 $REMOTE, validates the release refs, asks for confirmation, performs the
@@ -249,6 +267,7 @@ create_release() {
 main() {
     cd -- "$PROJECT_DIR"
     if [[ ${1:-} == -h || ${1:-} == --help ]]; then usage; exit 0; fi
+    if [[ $# -eq 0 ]]; then usage current >&2; exit 2; fi
     validate_arguments "$@"
     preflight
     confirm_release

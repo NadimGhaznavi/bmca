@@ -5,7 +5,7 @@ Layout: Default
 
 - [Install bmca](/pages/use-cases/install-bmca.html)
 - Provide TLS certificates for Web Services
-- Provide TLS certificates for MariaDB
+- [Provide TLS certificates for MariaDB](/pages/use-cases/issue-db-certs.html)
 - Provide trusted client identities
 - Establish trust on application hosts
 - Support certificate lifecycle management
