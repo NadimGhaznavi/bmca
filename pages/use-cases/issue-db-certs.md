@@ -1,7 +1,7 @@
 ---
-Title: Provide TLS certificates for MariaDB
+title: Provide TLS certificates for MariaDB
 author_profile: true
-Layout: Default
+layout: single
 ---
 
 ![BMCA Logo](/pages/images/bmca-logo.png)
