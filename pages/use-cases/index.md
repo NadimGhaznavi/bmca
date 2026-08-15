@@ -1,7 +1,7 @@
 ---
-Title: Use Cases
+title: Use Cases
 author_profile: true
-Layout: Default
+layout: single
 ---
 
 ![BMCA Logo](/pages/images/bmca-logo.png)
