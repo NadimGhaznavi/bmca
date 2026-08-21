@@ -35,6 +35,9 @@ offline_init() {
         --provisioner "$STEP_CA_PROVISIONER" --password-file "$password_file" \
         --provisioner-password-file "$password_file" --ssh
 
+    "$SCRIPT_DIR/initialize-step-ca.sh" --environment "$BMCA_ENV" \
+        --workspace "$workspace" --password-file "$password_file"
+
     # Convert ceremony-host paths to their final online locations.
     sed -i -E \
         -e 's#"root": "[^"]+"#"root": "'"$STEP_CA_CERTS_DIR"'/root_ca.crt"#' \
@@ -101,7 +104,8 @@ online_import() {
     rsync -a --chown="$STEP_CA_USER:$STEP_CA_GROUP" "$staging/templates/" "$STEP_CA_STATE_DIR/templates/"
     chmod 0700 "$STEP_CA_SECRETS_DIR"; chmod 0600 "$STEP_CA_SECRETS_DIR"/*
     systemctl enable --now step-ca.service
-    success "Imported and started the $BMCA_ENV CA. The X.509 root key remains offline."
+    "$SCRIPT_DIR/validate-ca.sh" --environment "$BMCA_ENV"
+    success "Imported, started, and validated the $BMCA_ENV CA. The X.509 root key remains offline."
 }
 
 case ${1:-} in offline) shift; offline_init "$@";; import) shift; online_import "$@";; -h|--help) usage;; *) usage >&2; exit 2;; esac

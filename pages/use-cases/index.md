@@ -9,6 +9,7 @@ layout: single
 # Use Cases
 
 - [Install bmca](/pages/use-cases/install-bmca)
+- [Uninstall bmca](/pages/use-cases/uninstall)
 - Provide TLS certificates for Web Services
 - [Provide TLS certificates for MariaDB](/pages/use-cases/issue-db-certs)
 - Provide trusted client identities

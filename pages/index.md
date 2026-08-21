@@ -16,12 +16,12 @@ run on Paris using `prod`.
 These documents explain the decisions that operators must understand before
 creating keys or changing policy:
 
-1. [Architecture and trust boundaries](design/architecture.md)
+1. [Architecture and trust boundaries](design/architecture.html)
    - Development and production separation
    - Offline X.509 root versus online intermediate
    - Local live state versus encrypted NFS backups
    - Filesystem, service-account, and deployment boundaries
-2. [Certificate issuance policy](design/issuance-policy.md)
+2. [Certificate issuance policy](design/issuance-policy.html)
    - Approved XMR Pool web and MariaDB certificate types
    - SSH host/user CA separation
    - Identity, lifetime, and authorization expectations
@@ -31,33 +31,33 @@ creating keys or changing policy:
 
 Follow these runbooks in order for a new environment:
 
-1. [Installation and host preparation](runbooks/installation.md)
+1. [Installation and host preparation](runbooks/installation.html)
    - Verify the Git release, pinned software, hostname, and NFS destination
    - Install bmca under `/opt/bmca`
    - Create the service account, local state paths, and systemd unit
-2. [Initial CA ceremony](runbooks/initialization.md)
+2. [Initial CA ceremony](runbooks/initialization.html)
    - Generate the offline root and initial online authority material
    - Verify the root fingerprint and filtered transfer bundle
    - Import only online keys and start the CA
-3. [Certificate issuance](runbooks/certificate-issuance.md)
+3. [Certificate issuance](runbooks/certificate-issuance.html)
    - Issue and deploy XMR Pool web TLS certificates
    - Issue MariaDB server and application mTLS certificates
    - Issue administrator MariaDB client certificates
-4. [Encrypted backup and restoration](runbooks/backup-restore.md)
+4. [Encrypted backup and restoration](runbooks/backup-restore.html)
    - Create the independent backup passphrase
    - Produce and verify encrypted NFS backups
    - Restore state safely and validate the recovered CA
-5. [Routine validation and uninstall](runbooks/operations.md)
+5. [Routine validation and uninstall](runbooks/operations.html)
    - Check certificate chains, key separation, service state, and HTTPS health
    - Remove installed software while preserving CA state
 
 Use these runbooks when their corresponding lifecycle event occurs:
 
-- [Intermediate CA rotation](runbooks/intermediate-rotation.md): planned
+- [Intermediate CA rotation](runbooks/intermediate-rotation.html): planned
   intermediate renewal using an online CSR and offline root signature.
-- [Git release procedure](runbooks/release.md): publish an immutable version
+- [Git release procedure](runbooks/release.html): publish an immutable version
   before deployment to Sally or Paris.
-- [Test suite](runbooks/testing.md): run safe automated tests and the explicit
+- [Test suite](runbooks/testing.html): run safe automated tests and the explicit
   Sally development lifecycle exercise before production releases.
 
 ## Suggested reading paths
