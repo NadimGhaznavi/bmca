@@ -25,6 +25,13 @@ grep -Fq '"root": "/var/lib/step-ca/certs/root_ca.crt"' "$work/pki/config/ca.jso
 grep -Fq '"key": "/var/lib/step-ca/secrets/intermediate_ca_key"' "$work/pki/config/ca.json"
 grep -Fq '"dataSource": "/var/lib/step-ca/db"' "$work/pki/config/ca.json"
 ! grep -Fq "$work" "$work/pki/config/ca.json"
+for provisioner in "$STEP_CA_WEB_PROVISIONER" "$STEP_CA_DB_SERVER_PROVISIONER" \
+    "$STEP_CA_DB_REPLICATION_PROVISIONER" "$STEP_CA_DB_APPLICATION_PROVISIONER" \
+    "$STEP_CA_DB_ADMIN_PROVISIONER"; do
+    grep -Fq '"name": "'"$provisioner"'"' "$work/pki/config/ca.json"
+done
+tar -tf "$bundle" | grep -qx templates/certs/x509/web-server.tpl
+tar -tf "$bundle" | grep -qx templates/certs/x509/mariadb-replication.tpl
 grep -Eq '^root_fingerprint=[0-9a-f]{64}$' "$bundle.manifest"
 grep -Eq '^online_bundle_sha256=[0-9a-f]{64}$' "$bundle.manifest"
 (cd "$work" && sha256sum -c "$(basename "$bundle").sha256")

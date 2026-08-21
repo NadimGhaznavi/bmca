@@ -18,8 +18,9 @@ and transfer-bundle checksum on paper or in an approved audit record.
 5. Move the full workspace, including the root key, to offline encrypted media.
 6. Transfer only the online bundle to the CA host. Transfer `/root/.bmca`
    through a separate secure channel and verify its mode is still `0600`.
-7. Run `install.sh`, followed by `initialize-ca.sh import`.
-8. Run `validate-ca.sh`, configure the separate backup passphrase as described
+7. Run `install.sh`, followed by `initialize-ca.sh import`. The import starts
+   `step-ca` and validates the running CA before it succeeds.
+8. Configure the separate backup passphrase as described
    in [backup and restoration](backup-restore.md), and create the first backup.
 
 The offline command automatically creates and checks the filtered online
@@ -42,7 +43,6 @@ sudo scripts/install.sh --environment prod
 sudo scripts/initialize-ca.sh import \
   --environment prod \
   --bundle /secure/transfer/bmca-prod-online-prod.tar
-sudo scripts/validate-ca.sh --environment prod
 sudo install -d -m 0700 /etc/bmca
 sudo sh -c 'umask 077; openssl rand -base64 48 > /etc/bmca/backup-passphrase'
 sudo scripts/backup-ca.sh --environment prod
