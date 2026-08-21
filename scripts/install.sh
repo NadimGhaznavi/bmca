@@ -41,10 +41,11 @@ main() {
     id "$STEP_CA_USER" >/dev/null 2>&1 ||
         useradd --system --gid "$STEP_CA_GROUP" --home-dir "$STEP_CA_STATE_DIR" --shell /usr/sbin/nologin "$STEP_CA_USER"
 
-    install -d -o root -g root -m 0755 "$INSTALL_DIR" "$INSTALL_SCRIPTS_DIR" "$INSTALL_CONF_DIR" "$INSTALL_SYSTEMD_DIR"
+    install -d -o root -g root -m 0755 "$INSTALL_DIR" "$INSTALL_SCRIPTS_DIR" "$INSTALL_CONF_DIR" "$INSTALL_SYSTEMD_DIR" "$INSTALL_TEMPLATES_DIR"
     rsync -a --delete --exclude backups --exclude '*.bak' "$SOURCE_DIR/scripts/" "$INSTALL_SCRIPTS_DIR/"
     rsync -a --delete "$SOURCE_DIR/conf/" "$INSTALL_CONF_DIR/"
     rsync -a --delete "$SOURCE_DIR/systemd/" "$INSTALL_SYSTEMD_DIR/"
+    rsync -a --delete "$SOURCE_DIR/templates/" "$INSTALL_TEMPLATES_DIR/"
     install -d -o root -g "$STEP_CA_GROUP" -m 0750 "$STEP_CA_CONFIG_DIR"
     install -d -o root -g root -m 0700 "$BMCA_CONFIG_DIR"
     install -d -o "$STEP_CA_USER" -g "$STEP_CA_GROUP" -m 0700 "$STEP_CA_STATE_DIR" "$STEP_CA_CERTS_DIR" "$STEP_CA_SECRETS_DIR" "$STEP_CA_DB_DIR"

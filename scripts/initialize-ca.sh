@@ -35,6 +35,9 @@ offline_init() {
         --provisioner "$STEP_CA_PROVISIONER" --password-file "$password_file" \
         --provisioner-password-file "$password_file" --ssh
 
+    "$SCRIPT_DIR/initialize-step-ca.sh" --environment "$BMCA_ENV" \
+        --workspace "$workspace" --password-file "$password_file"
+
     # Convert ceremony-host paths to their final online locations.
     sed -i -E \
         -e 's#"root": "[^"]+"#"root": "'"$STEP_CA_CERTS_DIR"'/root_ca.crt"#' \
