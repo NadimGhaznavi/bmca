@@ -3,6 +3,8 @@ Description=Bear & Moose Smallstep Certificate Authority
 Documentation=https://smallstep.com/docs/step-ca/
 After=network-online.target
 Wants=network-online.target
+ConditionPathExists=/etc/step-ca/ca.json
+ConditionPathExists=/etc/step-ca/intermediate-password
 
 [Service]
 Type=simple

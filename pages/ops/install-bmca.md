@@ -40,3 +40,7 @@ root@sally:~/bmca # systemctl cat step-ca.service
 
 Continue with [Set Up CA](/pages/ops/setup-ca) for a new CA or
 [Restore CA](/pages/ops/restore-ca) when rebuilding the host.
+
+When reinstalling BMCA with an existing CA in `/etc/step-ca` and
+`/var/lib/step-ca`, the installer enables and starts `step-ca.service`
+automatically.
