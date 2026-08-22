@@ -16,15 +16,15 @@ The *Bear and Moose Certificate Authority* project aims to provide the basic fun
 
 ## CA host
 
-1. [Install BMCA](/pages/use-cases/install-bmca)
-2. [Set Up CA](/pages/use-cases/setup-ca)
-3. [Back Up CA](/pages/use-cases/backup-ca)
-4. [Restore CA](/pages/use-cases/restore-ca)
-5. [Issue Certificates](/pages/use-cases/issue-certificates)
-6. [Uninstall BMCA](/pages/use-cases/uninstall-bmca)
+1. [Install BMCA](/pages/ops/install-bmca)
+2. [Set Up CA](/pages/ops/setup-ca)
+3. [Back Up CA](/pages/ops/backup-ca)
+4. [Restore CA](/pages/ops/restore-ca)
+5. [Issue Certificates](/pages/ops/issue-certificates)
+6. [Uninstall BMCA](/pages/ops/uninstall-bmca)
 
 ## Target host
 
-1. [Install MariaDB Certificates](/pages/use-cases/install-mariadb-certificates)
-2. [Install Python Database Certificate](/pages/use-cases/install-python-db-certificate)
-3. [Install Caddy Certificates](/pages/use-cases/install-caddy-certificates)
+1. [Install MariaDB Certificates](/pages/ops/install-mariadb-certificates)
+2. [Install Python Database Certificate](/pages/ops/install-python-db-certificate)
+3. [Install Caddy Certificates](/pages/ops/install-caddy-certificates)
