@@ -8,7 +8,9 @@ layout: single
 
 ---
 
-The *Bear and Moose Certificate Authority* project aims to provide the basic functions of a Certificate Authority. Certificates are generated and can be installed on target systems to support SSL/TLS encryption. 
+The **Bear and Moose Certificate Authority** project aims to provide the basic functions of a Certificate Authority. Certificates are generated and can be installed on target systems to support SSL/TLS encryption. 
+
+Use cases for **BMCA** include certificate management for active development teams, QA teams, and production environments.
 
 ---
 

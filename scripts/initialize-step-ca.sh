@@ -60,7 +60,10 @@ main() {
     local rollback
     rollback=$(mktemp "$workspace/config/ca.json.rollback.XXXXXX")
     cp -- "$ca_config" "$rollback"
-    rollback_config() { cp -- "$rollback" "$ca_config"; rm -f -- "$rollback"; }
+    rollback_config() {
+        [[ ! -f $rollback ]] || cp -- "$rollback" "$ca_config"
+        rm -f -- "$rollback"
+    }
     trap rollback_config ERR
 
     install -d -m 0700 "$target_templates"
