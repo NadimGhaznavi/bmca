@@ -28,13 +28,15 @@ printf '%s\n' \
     "STEP_CA_CERTS_DIR=\"$work/state/certs\"" \
     "STEP_CA_SECRETS_DIR=\"$work/state/secrets\"" \
     "STEP_CA_DB_DIR=\"$work/state/db\"" \
+    "BMCA_STATE_DIR=\"$work/bmca-state\"" \
+    "BMCA_ROOT_CA_DIR=\"$work/bmca-state/root-ca\"" \
     'STEP_CA_USER="root"' \
     'STEP_CA_GROUP="root"' \
     "INSTALL_CONF_DIR=\"$work/install/conf\"" >>"$work/settings.cfg"
 
 PATH="$work/bin:$PATH" BMCA_SETTINGS="$work/settings.cfg" \
-    "$ROOT/scripts/initialize-ca.sh" local --environment dev \
-    --workspace "$work/root-workspace" --password-file "$work/password" >/dev/null
+    "$ROOT/scripts/initialize-bmca.sh" --environment dev \
+    --password-file "$work/password" >/dev/null
 
 [[ -f $work/etc/step-ca/ca.json ]]
 [[ -f $work/etc/step-ca/intermediate-password ]]
@@ -42,7 +44,7 @@ PATH="$work/bin:$PATH" BMCA_SETTINGS="$work/settings.cfg" \
 [[ -f $work/state/certs/intermediate_ca.crt ]]
 [[ -f $work/state/secrets/intermediate_ca_key ]]
 [[ -f $work/state/templates/certs/x509/web-server.tpl ]]
-[[ -f $work/root-workspace/secrets/root_ca_key ]]
+[[ -f $work/bmca-state/root-ca/secrets/root_ca_key ]]
 [[ ! -e $work/state/secrets/root_ca_key ]]
 cmp -s "$work/password" "$work/etc/step-ca/intermediate-password"
-printf 'Single-host local initialization test passed.\n'
+printf 'Single-host BMCA initialization test passed.\n'

@@ -7,6 +7,12 @@ for script in "$ROOT"/scripts/*.sh; do
     [[ $output == *Usage:* ]] || { printf '%s --help has no usage text.\n' "$script" >&2; exit 1; }
 done
 
+initialize_help=$("$ROOT/scripts/initialize-bmca.sh" --help)
+[[ $initialize_help == *'initialize-bmca.sh --environment dev|prod'* ]] || {
+    printf 'initialize-bmca.sh --help does not describe the supported command.\n' >&2
+    exit 1
+}
+
 for environment in '' qa development production; do
     if BMCA_SETTINGS="$ROOT/conf/settings.cfg" bash -c '
         source "$1/scripts/lib/common.sh"
