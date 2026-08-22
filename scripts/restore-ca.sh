@@ -32,15 +32,21 @@ main() {
         --decrypt "$archive" | tar -C "$staging" -xpf -
     local restored_config="$staging/${STEP_CA_CONFIG_DIR#/}"
     local restored_state="$staging/${STEP_CA_STATE_DIR#/}"
+    local restored_root_ca="$staging/${BMCA_ROOT_CA_DIR#/}"
     require_file "$restored_config/ca.json"; require_file "$restored_state/certs/root_ca.crt"
     require_file "$restored_config/$(basename "$STEP_CA_PASSWORD_FILE")"
     require_file "$restored_state/certs/intermediate_ca.crt"; require_file "$restored_state/secrets/intermediate_ca_key"
+    require_file "$restored_root_ca/certs/root_ca.crt"; require_file "$restored_root_ca/secrets/root_ca_key"
     [[ ! -e $restored_state/secrets/root_ca_key ]] || die "Backup contains a root private key; refusing restore."
     "$STEP_CLI_BIN" certificate verify "$restored_state/certs/intermediate_ca.crt" --roots "$restored_state/certs/root_ca.crt"
 
     systemctl stop step-ca.service 2>/dev/null || true
     rsync -a --delete "$restored_config/" "$STEP_CA_CONFIG_DIR/"
     rsync -a --delete --chown="$STEP_CA_USER:$STEP_CA_GROUP" "$restored_state/" "$STEP_CA_STATE_DIR/"
+    install -d -o root -g root -m 0700 "$BMCA_ROOT_CA_DIR"
+    rsync -a --delete --chown=root:root "$restored_root_ca/" "$BMCA_ROOT_CA_DIR/"
+    chmod 0700 "$BMCA_ROOT_CA_DIR" "$BMCA_ROOT_CA_DIR/secrets"
+    chmod 0600 "$BMCA_ROOT_CA_DIR/secrets"/*
     chown root:"$STEP_CA_GROUP" "$STEP_CA_CONFIG_DIR" "$STEP_CA_CONFIG_FILE" "$STEP_CA_PASSWORD_FILE"
     chmod 0750 "$STEP_CA_CONFIG_DIR"; chmod 0640 "$STEP_CA_CONFIG_FILE" "$STEP_CA_PASSWORD_FILE"
     systemctl enable --now step-ca.service

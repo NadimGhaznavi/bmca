@@ -6,7 +6,7 @@ usage() {
     cat <<EOF
 Usage:
   $(basename "$0") request --environment dev|prod [--password-file FILE]
-  $(basename "$0") sign --environment dev|prod --offline-workspace DIR --request FILE [--password-file FILE]
+  $(basename "$0") sign --environment dev|prod --request FILE [--password-file FILE]
   $(basename "$0") install --environment dev|prod --certificate FILE --key FILE [--password-file FILE]
 EOF
 }
@@ -32,16 +32,16 @@ create_request() {
     printf '%s\n' "environment=$BMCA_ENV" "ca_name=$CA_NAME" "root_fingerprint=$root_fingerprint" \
         "csr_sha256=$(sha256sum "$csr" | awk '{print $1}')" >"$csr.manifest"
     success "CSR created: $csr"
-    info "Transfer the CSR and its manifest to the offline root system; keep $key on this host."
+    info "Sign this request with the local root using the sign command."
 }
 
 sign_request() {
-    local environment='' workspace='' request='' password_file=''
-    while (($#)); do case $1 in --environment) environment=$2; shift 2;; --offline-workspace) workspace=$2; shift 2;;
+    local environment='' request='' password_file=''
+    while (($#)); do case $1 in --environment) environment=$2; shift 2;;
         --request) request=$2; shift 2;; --password-file) password_file=$2; shift 2;; *) die "Unknown argument: $1";; esac; done
     load_settings; select_environment "$environment"; password_file=${password_file:-$CA_PASSWORD_FILE}
     require_file "$request"; require_file "$request.manifest"; require_file "$password_file"; check_secret_mode "$password_file"
-    local root_crt="$workspace/certs/root_ca.crt" root_key="$workspace/secrets/root_ca_key"
+    local root_crt="$BMCA_ROOT_CA_DIR/certs/root_ca.crt" root_key="$BMCA_ROOT_CA_DIR/secrets/root_ca_key"
     require_file "$root_crt"; require_file "$root_key"; require_command openssl; require_command sha256sum
     grep -Fxq "environment=$BMCA_ENV" "$request.manifest" || die "CSR environment does not match."
     grep -Fxq "ca_name=$CA_NAME" "$request.manifest" || die "CSR CA name does not match."
@@ -57,7 +57,7 @@ sign_request() {
         "root_fingerprint=$("$STEP_CLI_BIN" certificate fingerprint "$root_crt")" \
         "certificate_sha256=$(sha256sum "$certificate" | awk '{print $1}')" >"$certificate.manifest"
     success "Signed intermediate: $certificate"
-    info "Return the certificate and its manifest to $CA_HOST; never transfer the root key."
+    info "Install the signed certificate on $CA_HOST using the install command."
 }
 
 install_certificate() {
