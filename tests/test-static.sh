@@ -32,6 +32,7 @@ grep -Fq "User=$STEP_CA_USER" "$ROOT/systemd/step-ca.service"
 grep -Fq "ConditionPathExists=$STEP_CA_CONFIG_FILE" "$ROOT/systemd/step-ca.service"
 grep -Fq "ConditionPathExists=$STEP_CA_PASSWORD_FILE" "$ROOT/systemd/step-ca.service"
 grep -Fq 'systemctl enable --now step-ca.service' "$ROOT/scripts/install.sh"
+grep -Fq 'systemctl enable --now step-ca.service' "$ROOT/scripts/restore-ca.sh"
 grep -Fq 'chmod 0640 "$STEP_CA_CONFIG_FILE" "$STEP_CA_PASSWORD_FILE"' "$ROOT/scripts/restore-ca.sh"
 ! grep -RIE --exclude-dir=.git -- '-----BEGIN (ENCRYPTED |RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----' "$ROOT"
 printf 'Static checks passed.\n'

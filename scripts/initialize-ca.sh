@@ -9,11 +9,15 @@ usage() {
 Usage:
   $(basename "$0") offline --environment dev|prod --workspace DIR [--password-file FILE]
   $(basename "$0") import  --environment dev|prod --bundle FILE [--password-file FILE]
+  $(basename "$0") local   --environment dev|prod --workspace DIR [--password-file FILE]
 
 The offline command creates the complete PKI in DIR and a filtered online
 bundle beside it. Keep DIR offline: it contains the X.509 root private key.
 The password defaults to CA_PASSWORD_FILE from settings.cfg. Transfer the
 bundle and password through separate secure channels.
+
+The local command performs both steps on the CA host. DIR is retained and
+contains the root private key, so it must be root-only and must not be shared.
 EOF
 }
 
@@ -108,4 +112,27 @@ online_import() {
     success "Imported, started, and validated the $BMCA_ENV CA. The X.509 root key remains offline."
 }
 
-case ${1:-} in offline) shift; offline_init "$@";; import) shift; online_import "$@";; -h|--help) usage;; *) usage >&2; exit 2;; esac
+local_init() {
+    local environment='' workspace='' password_file=''
+    while (($#)); do case $1 in
+        --environment) environment=$2; shift 2;; --workspace) workspace=$2; shift 2;;
+        --password-file) password_file=$2; shift 2;; *) die "Unknown argument: $1";; esac; done
+    load_settings; select_environment "$environment"; password_file=${password_file:-$CA_PASSWORD_FILE}
+    require_root; assert_host_matches_environment
+    [[ -n $workspace && $workspace == /* ]] || die "--workspace must be an absolute path."
+    assert_safe_absolute_path "$workspace"
+
+    offline_init --environment "$BMCA_ENV" --workspace "$workspace" --password-file "$password_file"
+    online_import --environment "$BMCA_ENV" --bundle "$workspace-online-$BMCA_ENV.tar" \
+        --password-file "$password_file"
+    success "Created, installed, started, and validated the local $BMCA_ENV CA."
+    info "Root CA material is retained in $workspace; keep this directory root-only."
+}
+
+case ${1:-} in
+    offline) shift; offline_init "$@";;
+    import) shift; online_import "$@";;
+    local) shift; local_init "$@";;
+    -h|--help) usage;;
+    *) usage >&2; exit 2;;
+esac

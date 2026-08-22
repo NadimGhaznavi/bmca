@@ -28,7 +28,7 @@ Install development on Sally:
 
 ```sh
 root@sally:~/bmca # ./scripts/install.sh --environment dev
-[SUCCESS] Installed bmca 0.2.38 for dev. Initialize or restore the CA before enabling the service.
+[SUCCESS] Installed bmca REPLACE_WITH_VERSION for dev. Initialize or restore the complete CA before enabling the service.
 ```
 
 Verify the installation:
@@ -36,6 +36,8 @@ Verify the installation:
 ```sh
 root@sally:~/bmca # test "$(cat /opt/bmca/conf/environment)" = dev
 root@sally:~/bmca # systemctl cat step-ca.service
+root@sally:~/bmca # systemctl is-enabled step-ca.service
+disabled
 ```
 
 Continue with [Set Up CA](/pages/ops/setup-ca) for a new CA or
@@ -44,3 +46,6 @@ Continue with [Set Up CA](/pages/ops/setup-ca) for a new CA or
 When reinstalling BMCA with an existing CA in `/etc/step-ca` and
 `/var/lib/step-ca`, the installer enables and starts `step-ca.service`
 automatically.
+
+BMCA currently supports `dev` on Sally and `prod` on Paris. Use the matching
+environment in every command; scripts reject execution on the wrong host.

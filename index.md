@@ -23,7 +23,9 @@ Use cases for **BMCA** include certificate management for active development tea
 3. [Back Up CA](/pages/ops/backup-ca)
 4. [Restore CA](/pages/ops/restore-ca)
 5. [Issue Certificates](/pages/ops/issue-certificates)
-6. [Uninstall BMCA](/pages/ops/uninstall-bmca)
+6. [Issue SSH Certificates](/pages/ops/issue-ssh-certificates)
+7. [Rotate the Intermediate CA](/pages/ops/rotate-intermediate)
+8. [Uninstall BMCA](/pages/ops/uninstall-bmca)
 
 ## Target host
 
