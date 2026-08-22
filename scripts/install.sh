@@ -70,13 +70,16 @@ main() {
     printf '%s\n' "$BMCA_ENV" >"$INSTALL_CONF_DIR/environment"
     chmod 0644 "$INSTALL_CONF_DIR/environment"
     systemctl daemon-reload
-    if ((service_was_active)); then
-        systemctl start step-ca.service
-        success "Replaced bmca with $PROJECT_VERSION for $BMCA_ENV and restarted step-ca."
-    elif [[ -f $STEP_CA_CONFIG_FILE ]]; then
-        success "Installed bmca $PROJECT_VERSION for $BMCA_ENV. Existing step-ca state remains stopped."
+    if [[ -f $STEP_CA_CONFIG_FILE && -f $STEP_CA_PASSWORD_FILE ]]; then
+        systemctl enable --now step-ca.service
+        if ((service_was_active)); then
+            success "Replaced bmca with $PROJECT_VERSION for $BMCA_ENV and restarted step-ca."
+        else
+            success "Installed bmca $PROJECT_VERSION for $BMCA_ENV and started the existing CA."
+        fi
     else
-        success "Installed bmca $PROJECT_VERSION for $BMCA_ENV. Initialize or restore the CA before enabling the service."
+        systemctl disable step-ca.service 2>/dev/null || true
+        success "Installed bmca $PROJECT_VERSION for $BMCA_ENV. Initialize or restore the complete CA before enabling the service."
     fi
     install_complete=1
     trap - EXIT
