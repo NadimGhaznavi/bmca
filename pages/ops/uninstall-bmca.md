@@ -25,3 +25,7 @@ root@sally:~ # test ! -e /var/lib/bmca
 root@sally:~ # test -d /etc/step-ca
 root@sally:~ # test -d /var/lib/step-ca
 ```
+
+A root workspace created with `initialize-ca.sh local` is outside BMCA's
+managed directories and is also preserved. Remove it separately only when you
+intend to destroy and regenerate that CA.

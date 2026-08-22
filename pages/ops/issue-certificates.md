@@ -56,7 +56,8 @@ Create the transfer archive:
 root@sally:~ # install -m 0644 /var/lib/step-ca/certs/root_ca.crt "$OUTPUT/root_ca.crt"
 root@sally:~ # install -m 0644 /var/lib/step-ca/certs/intermediate_ca.crt "$OUTPUT/intermediate_ca.crt"
 root@sally:~ # tar -C "$(dirname "$OUTPUT")" -cf "/var/lib/bmca/issued/$TARGET.tar" "$TARGET"
-root@sally:~ # sha256sum "/var/lib/bmca/issued/$TARGET.tar" > "/var/lib/bmca/issued/$TARGET.tar.sha256"
+root@sally:~ # cd /var/lib/bmca/issued
+root@sally:/var/lib/bmca/issued # sha256sum "$TARGET.tar" > "$TARGET.tar.sha256"
 ```
 
 Transfer these files with SSH:

@@ -43,7 +43,7 @@ main() {
     rsync -a --delete --chown="$STEP_CA_USER:$STEP_CA_GROUP" "$restored_state/" "$STEP_CA_STATE_DIR/"
     chown root:"$STEP_CA_GROUP" "$STEP_CA_CONFIG_DIR" "$STEP_CA_CONFIG_FILE" "$STEP_CA_PASSWORD_FILE"
     chmod 0750 "$STEP_CA_CONFIG_DIR"; chmod 0640 "$STEP_CA_CONFIG_FILE" "$STEP_CA_PASSWORD_FILE"
-    systemctl start step-ca.service
+    systemctl enable --now step-ca.service
     "$SCRIPT_DIR/validate-ca.sh" --environment "$BMCA_ENV"
     success "Restored $BMCA_ENV CA from $archive"
 }
