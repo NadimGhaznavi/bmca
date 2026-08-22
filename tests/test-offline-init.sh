@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-# shellcheck source=/dev/null
-source "$ROOT/conf/settings.cfg"
 work=$(mktemp -d /tmp/bmca-offline-test.XXXXXX)
 trap 'rm -rf -- "$work"' EXIT
+cp "$ROOT/conf/settings.cfg" "$work/settings.cfg"
+printf '%s\n' 'DEV_CA_NAME="bmca-offline-test.invalid"' >>"$work/settings.cfg"
+export BMCA_SETTINGS="$work/settings.cfg"
+# shellcheck source=/dev/null
+source "$BMCA_SETTINGS"
 printf '%s\n' 'bmca-disposable-test-password' >"$work/password"
 chmod 0600 "$work/password"
 
@@ -41,7 +44,7 @@ grep -Eq '^online_bundle_sha256=[0-9a-f]{64}$' "$bundle.manifest"
     "$work/intermediate_ca.csr" "$work/intermediate_ca_key" --csr \
     --password-file "$work/password" >/dev/null
 root_fingerprint=$("$STEP_CLI_BIN" certificate fingerprint "$work/pki/certs/root_ca.crt")
-printf '%s\n' 'environment=dev' 'ca_name=devca.osoyalce.com' \
+printf '%s\n' 'environment=dev' "ca_name=$DEV_CA_NAME" \
     "root_fingerprint=$root_fingerprint" \
     "csr_sha256=$(sha256sum "$work/intermediate_ca.csr" | awk '{print $1}')" \
     >"$work/intermediate_ca.csr.manifest"

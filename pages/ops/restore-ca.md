@@ -23,8 +23,7 @@ Restore the CA:
 ```sh
 root@sally:~ # /opt/bmca/scripts/restore-ca.sh \
   --environment dev \
-  --archive "$BACKUP" \
-  --skip-safety-backup
+  --archive "$BACKUP"
 Restore REPLACE_WITH_BACKUP onto sally? Current CA state will be replaced. [y/N] y
 [SUCCESS] dev CA validation passed.
 [SUCCESS] Restored dev CA from REPLACE_WITH_BACKUP
@@ -35,6 +34,8 @@ Verify the service:
 ```sh
 root@sally:~ # systemctl is-active step-ca.service
 active
+root@sally:~ # systemctl is-enabled step-ca.service
+enabled
 root@sally:~ # /opt/bmca/scripts/validate-ca.sh --environment dev
 [SUCCESS] dev CA validation passed.
 ```
