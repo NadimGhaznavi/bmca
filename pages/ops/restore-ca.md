@@ -29,6 +29,9 @@ Restore REPLACE_WITH_BACKUP onto sally? Current CA state will be replaced. [y/N]
 [SUCCESS] Restored dev CA from REPLACE_WITH_BACKUP
 ```
 
+The backup restores `/var/lib/bmca/root-ca` together with the complete step-ca
+runtime state.
+
 Verify the service:
 
 ```sh

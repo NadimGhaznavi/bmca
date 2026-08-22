@@ -26,6 +26,8 @@ root@sally:~ # test -d /etc/step-ca
 root@sally:~ # test -d /var/lib/step-ca
 ```
 
-A root workspace created with `initialize-ca.sh local` is outside BMCA's
-managed directories and is also preserved. Remove it separately only when you
-intend to destroy and regenerate that CA.
+The local root CA under `/var/lib/bmca/root-ca` is BMCA state, so uninstalling
+BMCA removes it. The step-ca runtime state remains available for reinstall,
+but intermediate rotation requires the local root CA. Copy that directory to
+separate storage or create an encrypted BMCA backup before uninstalling if you
+want to retain that ability.

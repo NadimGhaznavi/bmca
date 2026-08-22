@@ -8,6 +8,10 @@ layout: single
 
 # Install Caddy Certificates
 
+Use this BMCA-issued certificate only for an internal Caddy endpoint. For a
+public URL, configure Caddy with the public hostname and allow its automatic
+HTTPS support to obtain and renew the public certificate instead.
+
 Verify and extract the transferred web archive:
 
 ```sh

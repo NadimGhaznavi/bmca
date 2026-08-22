@@ -8,9 +8,8 @@ layout: single
 
 # Rotate the Intermediate CA
 
-With a CA created by the single-host workflow, the retained root workspace can
-sign a replacement intermediate locally. First create the request and locate
-its timestamped directory:
+The local root under `/var/lib/bmca/root-ca` signs replacement intermediates.
+First create the request and locate its timestamped directory:
 
 ```sh
 root@sally:~ # /opt/bmca/scripts/rotate-intermediate.sh request --environment dev
@@ -24,7 +23,6 @@ Sign it with the retained root, then install the replacement:
 ```sh
 root@sally:~ # /opt/bmca/scripts/rotate-intermediate.sh sign \
   --environment dev \
-  --offline-workspace /root/bmca-dev-root \
   --request "$ROTATION/intermediate_ca.csr"
 root@sally:~ # /opt/bmca/scripts/rotate-intermediate.sh install \
   --environment dev \

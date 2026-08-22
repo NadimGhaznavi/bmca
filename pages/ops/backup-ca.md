@@ -8,6 +8,11 @@ layout: single
 
 # Back Up CA
 
+The encrypted backup contains the step-ca configuration and runtime state, the
+installed environment marker, and the local root CA under
+`/var/lib/bmca/root-ca`. It is sufficient to restore the CA and retain
+intermediate-rotation capability.
+
 Create the backup passphrase once:
 
 ```sh
