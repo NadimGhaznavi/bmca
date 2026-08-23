@@ -1,5 +1,5 @@
 ---
-title: BMCA Operations
+title: Bear & Moose Certificate Authority
 author_profile: true
 layout: single
 ---
