@@ -1,20 +1,20 @@
 ---
-title: Set Up CA
+title: Set Up the CA
 author_profile: true
 layout: single
 ---
 
 ![BMCA Logo](/pages/images/bmca-logo.png)
 
-# Set Up CA
+# Set Up the CA
 
-Install BMCA first. Then create its password and initialize it directly on the
+As **root**, install BMCA first. Then create its password and initialize it directly on the
 host that will issue certificates:
 
 ```sh
-root@paris:~ # umask 077
-root@paris:~ # openssl rand -base64 48 > /root/.bmca
-root@paris:~ # /opt/bmca/scripts/initialize-bmca.sh --environment prod
+umask 077
+openssl rand -base64 48 > /root/.bmca
+/opt/bmca/scripts/initialize-bmca.sh --environment prod
 ```
 
 This one command creates and configures the CA, installs `ca.json` and the
@@ -30,11 +30,19 @@ Use `--environment dev` on Sally.
 Verify the resulting installation:
 
 ```sh
-root@paris:~ # test -f /etc/step-ca/ca.json
-root@paris:~ # test -f /etc/step-ca/intermediate-password
-root@paris:~ # systemctl is-enabled step-ca.service
+test -f /etc/step-ca/ca.json
+test -f /etc/step-ca/intermediate-password
+systemctl is-enabled step-ca.service
+```
+
+Output: 
+
+```sh
 enabled
-root@paris:~ # /opt/bmca/scripts/validate-ca.sh --environment prod
+```
+
+```sh
+/opt/bmca/scripts/validate-ca.sh --environment prod
 [SUCCESS] prod CA validation passed.
 ```
 
