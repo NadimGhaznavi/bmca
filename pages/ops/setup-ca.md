@@ -1,12 +1,12 @@
 ---
-title: Set Up CA
+title: Set Up the CA
 author_profile: true
 layout: single
 ---
 
 ![BMCA Logo](/pages/images/bmca-logo.png)
 
-# Set Up CA
+# Set Up the CA
 
 As **root**, install BMCA first. Then create its password and initialize it directly on the
 host that will issue certificates:
