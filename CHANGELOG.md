@@ -9,41 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [Release 0.4.5] - 2026-08-23 14:25 EDT
+## [Release 0.5.0] - 2026-08-23 15:26 EDT
 
-## [Release 0.4.4] - 2026-08-23 13:46 EDT
-
-## [Release 0.4.3] - 2026-08-23 13:37 EDT
-
-## [Release 0.4.2] - 2026-08-23 05:00 EDT
-
-## [Release 0.4.1] - 2026-08-22 15:09 EDT
-
-## [Release 0.4.0] - 2026-08-22 06:44 EDT
-
-## [Release 0.3.1] - 2026-08-22 06:14 EDT
-
-## [Release 0.3.0] - 2026-08-22 05:33 EDT
-
-## [Release 0.2.42] - 2026-08-22 04:58 EDT
-
-## [Release 0.2.41] - 2026-08-22 04:44 EDT
-
-## [Release 0.2.40] - 2026-08-22 03:26 EDT
-
-## [Release 0.2.39] - 2026-08-21 03:56 EDT
-
-## [Release 0.2.38] - 2026-08-21 03:29 EDT
-
-## [Release 0.2.37] - 2026-08-15 10:13 EDT
-
-## [Release 0.2.36] - 2026-08-15 10:09 EDT
-
-## [Release 0.2.35] - 2026-08-15 10:05 EDT
-
-## [Release 0.2.34] - 2026-08-15 10:00 EDT
-
-## [Release 0.2.33] - 2026-08-15 09:58 EDT
+- Initial functional deployment
+- Updated deployment information
 
 ## [Release 0.2.32] - 2026-08-15 06:26 EDT
 
