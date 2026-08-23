@@ -49,3 +49,7 @@ enabled
 The command refuses to overwrite an existing root CA directory or installed
 CA. To start over, uninstall BMCA, remove the preserved `/etc/step-ca` and
 `/var/lib/step-ca` directories, reinstall BMCA, and run initialization again.
+
+---
+
+[Home](/index.html)
