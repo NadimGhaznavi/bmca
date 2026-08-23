@@ -13,7 +13,8 @@ main() {
         --provisioner-password-file) provisioner_password=$2; shift 2;;
         --key-password-file) key_password=$2; shift 2;; --san) sans+=("$2"); shift 2;;
         --lifetime) lifetime=$2; shift 2;; -h|--help) usage; exit 0;; *) die "Unknown argument: $1";; esac; done
-    load_settings; select_environment "$environment"; require_command "$STEP_CLI_BIN"
+    load_settings; select_environment "$environment"; require_root; assert_host_matches_environment
+    require_command "$STEP_CLI_BIN"
     local provisioner=''
     case $kind in
         web-server) provisioner=$STEP_CA_WEB_PROVISIONER ;;

@@ -12,7 +12,8 @@ main() {
         --key-file) key_file=$2; shift 2;; --principal) principals+=("$2"); shift 2;;
         --provisioner-password-file) provisioner_password=$2; shift 2;; --key-password-file) key_password=$2; shift 2;;
         --lifetime) lifetime=$2; shift 2;; -h|--help) usage; exit 0;; *) die "Unknown argument: $1";; esac; done
-    load_settings; select_environment "$environment"; require_command "$STEP_CLI_BIN"
+    load_settings; select_environment "$environment"; require_root; assert_host_matches_environment
+    require_command "$STEP_CLI_BIN"
     [[ $type == host || $type == user ]] || die "Type must be host or user."
     [[ -n $key_id && $key_file == /* && ${#principals[@]} -gt 0 ]] || die "Key ID, absolute key path, and principals are required."
     require_file "$provisioner_password"; require_file "$key_password"; check_secret_mode "$provisioner_password"; check_secret_mode "$key_password"

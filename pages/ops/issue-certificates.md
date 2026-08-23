@@ -8,7 +8,11 @@ layout: single
 
 # Issue Certificates
 
-As **root**, set the request values:
+Run the command on the CA host that matches the environment: `dev` runs on
+Sally and `prod` runs on Paris. Each host has a different root CA, so an
+environment/host mismatch cannot authenticate the selected CA endpoint.
+
+As **root**, set the request values. This development example runs on Sally:
 
 ```sh
 ENVIRONMENT=dev
@@ -49,6 +53,18 @@ admin-client
 ```
 
 Client certificates do not require `--san`.
+
+If the client reports `certificate signed by unknown authority`, first check
+that the hostname and environment match:
+
+```sh
+hostname -s
+cat /opt/bmca/conf/environment
+```
+
+The expected pairs are `sally` / `dev` and `paris` / `prod`. Do not work
+around a mismatch by disabling TLS verification; run the request on the
+matching CA host with the matching environment instead.
 
 Create the transfer archive:
 
