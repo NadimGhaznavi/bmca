@@ -33,3 +33,19 @@ Use cases for **BMCA** include certificate management for active development tea
 2. [Install Python Database Certificate](/pages/ops/install-python-db-certificate)
 3. [Install Caddy Certificates](/pages/ops/install-caddy-certificates)
 
+## XMR Pool Project Support
+
+Quickly spin up a brand new *XMR Pool* project with the [new-xmr-certs.sh](/scripts/new-xmr-certs.sh) script.
+
+Run on the production CA:
+
+```sh
+cd /desired/parent/directory
+/opt/bmca/scripts/new-xmr-certs.sh
+```
+
+It generates 17 certificate/key pairs in `./new-certs`:
+
+- Web, admin, and cluster names use web-server.
+- Database names use mariadb-server.
+- Every certificate uses `--environment prod`.
