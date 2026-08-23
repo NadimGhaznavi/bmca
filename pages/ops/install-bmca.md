@@ -60,3 +60,7 @@ automatically.
 
 BMCA currently supports `dev` on Sally and `prod` on Paris. Use the matching
 environment in every command; scripts reject execution on the wrong host.
+
+---
+
+[Home](/index.html)

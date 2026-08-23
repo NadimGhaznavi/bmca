@@ -8,27 +8,27 @@ layout: single
 
 # Issue Certificates
 
-Set the request values:
+As **root**, set the request values:
 
 ```sh
-root@sally:~ # ENVIRONMENT=dev
-root@sally:~ # KIND=web-server
-root@sally:~ # SUBJECT=pool-dev.osoyalce.com
-root@sally:~ # TARGET=pool-dev
-root@sally:~ # OUTPUT="/var/lib/bmca/issued/$TARGET"
+ENVIRONMENT=dev
+KIND=web-server
+SUBJECT=pool-dev.osoyalce.com
+TARGET=pool-dev
+OUTPUT="/var/lib/bmca/issued/$TARGET"
 ```
 
 Create a separate password for the transferred private key:
 
 ```sh
-root@sally:~ # umask 077
-root@sally:~ # openssl rand -base64 48 > /root/.bmca-leaf
+umask 077
+openssl rand -base64 48 > /root/.bmca-leaf
 ```
 
 Issue the certificate:
 
 ```sh
-root@sally:~ # /opt/bmca/scripts/issue-x509.sh \
+/opt/bmca/scripts/issue-x509.sh \
   --environment "$ENVIRONMENT" \
   --kind "$KIND" \
   --subject "$SUBJECT" \
@@ -53,11 +53,11 @@ Client certificates do not require `--san`.
 Create the transfer archive:
 
 ```sh
-root@sally:~ # install -m 0644 /var/lib/step-ca/certs/root_ca.crt "$OUTPUT/root_ca.crt"
-root@sally:~ # install -m 0644 /var/lib/step-ca/certs/intermediate_ca.crt "$OUTPUT/intermediate_ca.crt"
-root@sally:~ # tar -C "$(dirname "$OUTPUT")" -cf "/var/lib/bmca/issued/$TARGET.tar" "$TARGET"
-root@sally:~ # cd /var/lib/bmca/issued
-root@sally:/var/lib/bmca/issued # sha256sum "$TARGET.tar" > "$TARGET.tar.sha256"
+install -m 0644 /var/lib/step-ca/certs/root_ca.crt "$OUTPUT/root_ca.crt"
+install -m 0644 /var/lib/step-ca/certs/intermediate_ca.crt "$OUTPUT/intermediate_ca.crt"
+tar -C "$(dirname "$OUTPUT")" -cf "/var/lib/bmca/issued/$TARGET.tar" "$TARGET"
+cd /var/lib/bmca/issued
+sha256sum "$TARGET.tar" > "$TARGET.tar.sha256"
 ```
 
 Transfer these files with SSH:
@@ -68,3 +68,7 @@ Transfer these files with SSH:
 ```
 
 Transfer `/root/.bmca-leaf` separately.
+
+---
+
+[Home](/index.html)
