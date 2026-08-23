@@ -8,35 +8,46 @@ layout: single
 
 # Install BMCA
 
-Clone the release into the configured source directory:
+As **root**, clone the release into the configured source directory:
 
 ```sh
-root@sally:~ # git clone git@github.com:NadimGhaznavi/bmca
-root@sally:~ # cd /root/bmca
+cd
+git clone git@github.com:NadimGhaznavi/bmca
+cd /root/bmca
 ```
 
 Confirm the required programs and backup directory:
 
 ```sh
-root@sally:~/bmca # source conf/settings.cfg
-root@sally:~/bmca # "$STEP_CLI_BIN" version
-root@sally:~/bmca # "$STEP_CA_BIN" version
-root@sally:~/bmca # test -d "$DEV_BACKUP_TARGET_DIR"
+source conf/settings.cfg
+"$STEP_CLI_BIN" version
+"$STEP_CA_BIN" version
+test -d "$DEV_BACKUP_TARGET_DIR"
 ```
 
 Install development on Sally:
 
 ```sh
-root@sally:~/bmca # ./scripts/install.sh --environment dev
+./scripts/install.sh --environment dev
+```
+
+output:
+
+```sh
 [SUCCESS] Installed bmca REPLACE_WITH_VERSION for dev. Initialize or restore the complete CA before enabling the service.
 ```
 
 Verify the installation:
 
 ```sh
-root@sally:~/bmca # test "$(cat /opt/bmca/conf/environment)" = dev
-root@sally:~/bmca # systemctl cat step-ca.service
-root@sally:~/bmca # systemctl is-enabled step-ca.service
+test "$(cat /opt/bmca/conf/environment)" = dev
+systemctl cat step-ca.service
+systemctl is-enabled step-ca.service
+```
+
+Output:
+
+```sh
 disabled
 ```
 
