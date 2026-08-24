@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Release 0.6.1] - 2026-08-24 02:54 EDT
+
 ## [Release 0.6.0] - 2026-08-24 02:51 EDT
 
 - Added [XMR Pool Project](/pages/ops/new-xmr-certs) support
