@@ -4,8 +4,6 @@ author_profile: true
 layout: single
 ---
 
-# Generate XMR Pool Certifcates
-
 Quickly spin up a set of brand new certificates for the [XMR Pool Project](https://xmrdocs) project certificates with the [new-xmr-certs.sh](/scripts/new-xmr-certs.sh) script.
 
 ---
