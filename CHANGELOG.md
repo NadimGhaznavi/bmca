@@ -9,7 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Release 0.6.2] - 2026-08-24 03:09 EDT
+
+---
+
 ## [Release 0.6.1] - 2026-08-24 02:54 EDT
+
+- Add section with *XMR Pool's* `dns-report.sh` output (this drives the `new-xmr-certs.sh` requirements)
+
+---
 
 ## [Release 0.6.0] - 2026-08-24 02:51 EDT
 
