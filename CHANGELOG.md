@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Release 0.6.3] - 2026-08-25 03:58 EDT
+
 - Changed the `--environment` switch to `--env` and updated the docs and tests
 
 ## [Release 0.6.2] - 2026-08-24 03:09 EDT
