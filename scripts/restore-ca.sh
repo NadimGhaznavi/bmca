@@ -5,8 +5,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"; source "$SCRIP
 main() {
     local environment='' archive='' skip_safety=0
     while (($#)); do case $1 in
-        -h|--help) printf 'Usage: %s --environment dev|prod --archive FILE [--skip-safety-backup]\n' "$(basename "$0")"; exit 0;;
-        --environment) environment=$2; shift 2;; --archive) archive=$2; shift 2;;
+        -h|--help) printf 'Usage: %s --env dev|prod --archive FILE [--skip-safety-backup]\n' "$(basename "$0")"; exit 0;;
+        --env) environment=$2; shift 2;; --archive) archive=$2; shift 2;;
         --skip-safety-backup) skip_safety=1; shift;; *) die "Unknown argument: $1";; esac; done
     load_settings; select_environment "$environment"; require_root; assert_host_matches_environment
     require_command gpg; require_command tar; require_command rsync; require_command flock; require_command realpath
@@ -20,7 +20,7 @@ main() {
     exec 9>"/run/bmca-restore.lock"; flock -n 9 || die "Another restore is running."
 
     if ((skip_safety == 0)) && [[ -f $STEP_CA_CONFIG_FILE ]]; then
-        "$SCRIPT_DIR/backup-ca.sh" --environment "$BMCA_ENV"
+        "$SCRIPT_DIR/backup-ca.sh" --env "$BMCA_ENV"
     fi
     if gpg --batch --quiet --pinentry-mode loopback --passphrase-file "$BACKUP_PASSPHRASE_FILE" \
         --decrypt "$archive" | tar -tf - | grep -Eq '(^/|(^|/)\.\.(/|$))'; then
@@ -50,7 +50,7 @@ main() {
     chown root:"$STEP_CA_GROUP" "$STEP_CA_CONFIG_DIR" "$STEP_CA_CONFIG_FILE" "$STEP_CA_PASSWORD_FILE"
     chmod 0750 "$STEP_CA_CONFIG_DIR"; chmod 0640 "$STEP_CA_CONFIG_FILE" "$STEP_CA_PASSWORD_FILE"
     systemctl enable --now step-ca.service
-    "$SCRIPT_DIR/validate-ca.sh" --environment "$BMCA_ENV"
+    "$SCRIPT_DIR/validate-ca.sh" --env "$BMCA_ENV"
     success "Restored $BMCA_ENV CA from $archive"
 }
 main "$@"

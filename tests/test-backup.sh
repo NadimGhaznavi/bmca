@@ -33,7 +33,7 @@ printf '%s\n' \
     "BACKUP_WORK_DIR=\"$work/backup-work\"" >>"$work/settings.cfg"
 
 PATH="$work/bin:$PATH" BMCA_SETTINGS="$work/settings.cfg" \
-    "$ROOT/scripts/backup-ca.sh" --environment dev >/dev/null
+    "$ROOT/scripts/backup-ca.sh" --env dev >/dev/null
 archive=$(find "$work/target" -maxdepth 1 -name '*.tar.gpg' -type f -print -quit)
 [[ -n $archive && -f $archive.sha256 ]]
 sha256sum -c "$archive.sha256" >/dev/null

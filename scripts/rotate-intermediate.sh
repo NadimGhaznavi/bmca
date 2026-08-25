@@ -5,9 +5,9 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"; source "$SCRIP
 usage() {
     cat <<EOF
 Usage:
-  $(basename "$0") request --environment dev|prod [--password-file FILE]
-  $(basename "$0") sign --environment dev|prod --request FILE [--password-file FILE]
-  $(basename "$0") install --environment dev|prod --certificate FILE --key FILE [--password-file FILE]
+  $(basename "$0") request --env dev|prod [--password-file FILE]
+  $(basename "$0") sign --env dev|prod --request FILE [--password-file FILE]
+  $(basename "$0") install --env dev|prod --certificate FILE --key FILE [--password-file FILE]
 EOF
 }
 
@@ -17,7 +17,7 @@ csr_key_digest() { openssl req -in "$1" -pubkey -noout | openssl pkey -pubin -ou
 
 create_request() {
     local environment='' password_file=''
-    while (($#)); do case $1 in --environment) environment=$2; shift 2;; --password-file) password_file=$2; shift 2;; *) die "Unknown argument: $1";; esac; done
+    while (($#)); do case $1 in --env) environment=$2; shift 2;; --password-file) password_file=$2; shift 2;; *) die "Unknown argument: $1";; esac; done
     load_settings; select_environment "$environment"; password_file=${password_file:-$CA_PASSWORD_FILE}
     require_root; assert_host_matches_environment; require_command openssl; require_command sha256sum
     require_file "$password_file"; check_secret_mode "$password_file"; require_file "$STEP_CA_CERTS_DIR/root_ca.crt"
@@ -37,7 +37,7 @@ create_request() {
 
 sign_request() {
     local environment='' request='' password_file=''
-    while (($#)); do case $1 in --environment) environment=$2; shift 2;;
+    while (($#)); do case $1 in --env) environment=$2; shift 2;;
         --request) request=$2; shift 2;; --password-file) password_file=$2; shift 2;; *) die "Unknown argument: $1";; esac; done
     load_settings; select_environment "$environment"; password_file=${password_file:-$CA_PASSWORD_FILE}
     require_file "$request"; require_file "$request.manifest"; require_file "$password_file"; check_secret_mode "$password_file"
@@ -62,7 +62,7 @@ sign_request() {
 
 install_certificate() {
     local environment='' certificate='' key='' password_file=''
-    while (($#)); do case $1 in --environment) environment=$2; shift 2;; --certificate) certificate=$2; shift 2;;
+    while (($#)); do case $1 in --env) environment=$2; shift 2;; --certificate) certificate=$2; shift 2;;
         --key) key=$2; shift 2;; --password-file) password_file=$2; shift 2;; *) die "Unknown argument: $1";; esac; done
     load_settings; select_environment "$environment"; password_file=${password_file:-$CA_PASSWORD_FILE}
     require_root; assert_host_matches_environment; require_file "$certificate"; require_file "$certificate.manifest"
@@ -91,7 +91,7 @@ install_certificate() {
     systemctl stop step-ca.service
     install -o "$STEP_CA_USER" -g "$STEP_CA_GROUP" -m 0600 "$certificate" "$STEP_CA_CERTS_DIR/intermediate_ca.crt"
     install -o "$STEP_CA_USER" -g "$STEP_CA_GROUP" -m 0600 "$key" "$STEP_CA_SECRETS_DIR/intermediate_ca_key"
-    if systemctl start step-ca.service && "$SCRIPT_DIR/validate-ca.sh" --environment "$BMCA_ENV"; then
+    if systemctl start step-ca.service && "$SCRIPT_DIR/validate-ca.sh" --env "$BMCA_ENV"; then
         BMCA_ROTATION_ROLLBACK_NEEDED=0
         success "Replacement intermediate installed. Create an encrypted backup now."
     else

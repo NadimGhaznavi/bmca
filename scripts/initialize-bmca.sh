@@ -5,14 +5,14 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
 
 usage() {
-    printf 'Usage: %s --environment dev|prod [--password-file FILE]\n' "$(basename "$0")"
+    printf 'Usage: %s --env dev|prod [--password-file FILE]\n' "$(basename "$0")"
 }
 
 main() {
     local environment='' password_file=''
     while (($#)); do
         case $1 in
-            --environment) [[ $# -ge 2 ]] || die "Missing environment."; environment=$2; shift 2 ;;
+            --env) [[ $# -ge 2 ]] || die "Missing value for --env."; environment=$2; shift 2 ;;
             --password-file) [[ $# -ge 2 ]] || die "Missing password file."; password_file=$2; shift 2 ;;
             -h|--help) usage; exit 0 ;;
             *) usage >&2; die "Unknown argument: $1" ;;
@@ -41,7 +41,7 @@ main() {
         --provisioner "$STEP_CA_PROVISIONER" --password-file "$password_file" \
         --provisioner-password-file "$password_file" --ssh
 
-    "$SCRIPT_DIR/initialize-step-ca.sh" --environment "$BMCA_ENV" \
+    "$SCRIPT_DIR/initialize-step-ca.sh" --env "$BMCA_ENV" \
         --workspace "$BMCA_ROOT_CA_DIR" --password-file "$password_file"
 
     sed -i -E \
@@ -68,7 +68,7 @@ main() {
     chmod 0600 "$STEP_CA_SECRETS_DIR"/*
 
     systemctl enable --now step-ca.service
-    "$SCRIPT_DIR/validate-ca.sh" --environment "$BMCA_ENV"
+    "$SCRIPT_DIR/validate-ca.sh" --env "$BMCA_ENV"
     success "Initialized, started, and validated BMCA for $BMCA_ENV."
     info "Local root CA material: $BMCA_ROOT_CA_DIR"
 }

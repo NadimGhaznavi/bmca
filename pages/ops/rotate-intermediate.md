@@ -12,7 +12,7 @@ The local root under `/var/lib/bmca/root-ca` signs replacement intermediates.
 First create the request and locate its timestamped directory:
 
 ```sh
-root@sally:~ # /opt/bmca/scripts/rotate-intermediate.sh request --environment dev
+root@sally:~ # /opt/bmca/scripts/rotate-intermediate.sh request --env dev
 root@sally:~ # ROTATION=$(find /var/lib/bmca/intermediate-rotation -mindepth 1 \
   -maxdepth 1 -type d -printf '%T@ %p\n' | sort -nr | head -1 | cut -d' ' -f2-)
 root@sally:~ # test -n "$ROTATION"
@@ -22,10 +22,10 @@ Sign it with the retained root, then install the replacement:
 
 ```sh
 root@sally:~ # /opt/bmca/scripts/rotate-intermediate.sh sign \
-  --environment dev \
+  --env dev \
   --request "$ROTATION/intermediate_ca.csr"
 root@sally:~ # /opt/bmca/scripts/rotate-intermediate.sh install \
-  --environment dev \
+  --env dev \
   --certificate "$ROTATION/intermediate_ca.crt" \
   --key "$ROTATION/intermediate_ca_key"
 Install the replacement dev intermediate and restart step-ca? [y/N] y

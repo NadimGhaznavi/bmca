@@ -35,7 +35,7 @@ printf '%s\n' \
     "INSTALL_CONF_DIR=\"$work/install/conf\"" >>"$work/settings.cfg"
 
 PATH="$work/bin:$PATH" BMCA_SETTINGS="$work/settings.cfg" \
-    "$ROOT/scripts/initialize-bmca.sh" --environment dev \
+    "$ROOT/scripts/initialize-bmca.sh" --env dev \
     --password-file "$work/password" >/dev/null
 
 [[ -f $work/etc/step-ca/ca.json ]]
