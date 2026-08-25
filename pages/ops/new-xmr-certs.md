@@ -25,7 +25,7 @@ The script generates 17 certificate/key pairs in `./new-certs`:
 
 - Web, admin, and cluster names use web-server.
 - Database names use mariadb-server.
-- Every certificate uses `--environment prod`.
+- Every certificate uses `--env prod`.
 - Default password files are `/root/.bmca` and `/root/.bmca-leaf`.
 
 The output directory must not already exist. Static and CLI tests pass.

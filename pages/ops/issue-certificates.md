@@ -33,7 +33,7 @@ Issue the certificate:
 
 ```sh
 /opt/bmca/scripts/issue-x509.sh \
-  --environment "$ENVIRONMENT" \
+  --env "$ENVIRONMENT" \
   --kind "$KIND" \
   --subject "$SUBJECT" \
   --san "$SUBJECT" \

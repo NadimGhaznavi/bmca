@@ -4,9 +4,9 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"; source "$SCRIP
 
 main() {
     if [[ ${1:-} == -h || ${1:-} == --help ]]; then
-        printf 'Usage: %s --environment dev|prod\n' "$(basename "$0")"; exit 0
+        printf 'Usage: %s --env dev|prod\n' "$(basename "$0")"; exit 0
     fi
-    [[ ${1:-} == --environment && $# -eq 2 ]] || die "Usage: $(basename "$0") --environment dev|prod"
+    [[ ${1:-} == --env && $# -eq 2 ]] || die "Usage: $(basename "$0") --env dev|prod"
     load_settings; select_environment "$2"; require_root; assert_host_matches_environment
     require_command gpg; require_command tar; require_command flock; require_command sha256sum
     require_file "$BACKUP_PASSPHRASE_FILE"; check_secret_mode "$BACKUP_PASSPHRASE_FILE"

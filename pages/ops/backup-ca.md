@@ -24,7 +24,7 @@ root@sally:~ # test "$(stat -c '%a' /etc/bmca/backup-passphrase)" = 600
 Create the encrypted development backup:
 
 ```sh
-root@sally:~ # /opt/bmca/scripts/backup-ca.sh --environment dev
+root@sally:~ # /opt/bmca/scripts/backup-ca.sh --env dev
 [SUCCESS] Encrypted backup created: /imports/disk1/backups/bmca/dev/bmca-dev-REPLACE_WITH_TIMESTAMP.tar.gpg
 ```
 

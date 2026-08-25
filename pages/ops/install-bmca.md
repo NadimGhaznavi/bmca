@@ -28,7 +28,7 @@ test -d "$DEV_BACKUP_TARGET_DIR"
 Install development on Sally:
 
 ```sh
-./scripts/install.sh --environment dev
+./scripts/install.sh --env dev
 ```
 
 output:

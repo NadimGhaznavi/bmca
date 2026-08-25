@@ -4,9 +4,9 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"; source "$SCRIP
 
 main() {
     if [[ ${1:-} == -h || ${1:-} == --help ]]; then
-        printf 'Usage: %s --environment dev|prod\n' "$(basename "$0")"; exit 0
+        printf 'Usage: %s --env dev|prod\n' "$(basename "$0")"; exit 0
     fi
-    [[ ${1:-} == --environment && $# -eq 2 ]] || die "Usage: $(basename "$0") --environment dev|prod"
+    [[ ${1:-} == --env && $# -eq 2 ]] || die "Usage: $(basename "$0") --env dev|prod"
     load_settings; select_environment "$2"; require_command openssl; require_command curl
     local failures=0
     check() { if "$@"; then printf '[PASS] %s\n' "$*"; else printf '[FAIL] %s\n' "$*" >&2; failures=$((failures+1)); fi; }
