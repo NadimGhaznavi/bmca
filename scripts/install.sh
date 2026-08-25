@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/common.sh
 source "$SCRIPT_DIR/lib/common.sh"
 
-usage() { printf 'Usage: %s --environment dev|prod\n' "$(basename "$0")"; }
+usage() { printf 'Usage: %s --env dev|prod\n' "$(basename "$0")"; }
 
 main() {
     local environment=''
@@ -16,7 +16,7 @@ main() {
 
     while (($#)); do
         case $1 in
-            --environment) [[ $# -ge 2 ]] || die "Missing environment."; environment=$2; shift 2 ;;
+            --env) [[ $# -ge 2 ]] || die "Missing value for --env."; environment=$2; shift 2 ;;
             -h|--help) usage; exit 0 ;;
             *) usage >&2; die "Unknown argument: $1" ;;
         esac

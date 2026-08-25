@@ -30,7 +30,7 @@ main() {
     [[ ! -e $output_dir ]] || die "Output directory already exists: $output_dir"
 
     local -a common_args=(
-        --environment prod
+        --env prod
         --output-dir "$output_dir"
         --provisioner-password-file "$provisioner_password_file"
         --key-password-file "$key_password_file"

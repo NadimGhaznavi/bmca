@@ -2,13 +2,13 @@
 set -Eeuo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"; source "$SCRIPT_DIR/lib/common.sh"
 
-usage() { printf 'Usage: %s --environment dev|prod --type host|user --key-id ID --key-file PATH --principal NAME [--principal NAME]... --provisioner-password-file FILE --key-password-file FILE [--lifetime DURATION]\n' "$(basename "$0")"; }
+usage() { printf 'Usage: %s --env dev|prod --type host|user --key-id ID --key-file PATH --principal NAME [--principal NAME]... --provisioner-password-file FILE --key-password-file FILE [--lifetime DURATION]\n' "$(basename "$0")"; }
 
 main() {
     local environment='' type='' key_id='' key_file='' provisioner_password='' key_password='' lifetime=''
     local -a principals=()
     while (($#)); do case $1 in
-        --environment) environment=$2; shift 2;; --type) type=$2; shift 2;; --key-id) key_id=$2; shift 2;;
+        --env) environment=$2; shift 2;; --type) type=$2; shift 2;; --key-id) key_id=$2; shift 2;;
         --key-file) key_file=$2; shift 2;; --principal) principals+=("$2"); shift 2;;
         --provisioner-password-file) provisioner_password=$2; shift 2;; --key-password-file) key_password=$2; shift 2;;
         --lifetime) lifetime=$2; shift 2;; -h|--help) usage; exit 0;; *) die "Unknown argument: $1";; esac; done

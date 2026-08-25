@@ -16,7 +16,7 @@ root@sally:~ # test -f /root/.bmca-leaf || \
   sh -c 'umask 077; openssl rand -base64 48 > /root/.bmca-leaf'
 root@sally:~ # install -d -m 0700 /var/lib/bmca/issued/ssh
 root@sally:~ # /opt/bmca/scripts/issue-ssh.sh \
-  --environment dev \
+  --env dev \
   --type host \
   --key-id app01 \
   --key-file /var/lib/bmca/issued/ssh/app01 \

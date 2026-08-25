@@ -22,7 +22,7 @@ Restore the CA:
 
 ```sh
 root@sally:~ # /opt/bmca/scripts/restore-ca.sh \
-  --environment dev \
+  --env dev \
   --archive "$BACKUP"
 Restore REPLACE_WITH_BACKUP onto sally? Current CA state will be replaced. [y/N] y
 [SUCCESS] dev CA validation passed.
@@ -39,6 +39,6 @@ root@sally:~ # systemctl is-active step-ca.service
 active
 root@sally:~ # systemctl is-enabled step-ca.service
 enabled
-root@sally:~ # /opt/bmca/scripts/validate-ca.sh --environment dev
+root@sally:~ # /opt/bmca/scripts/validate-ca.sh --env dev
 [SUCCESS] dev CA validation passed.
 ```

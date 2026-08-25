@@ -14,7 +14,7 @@ host that will issue certificates:
 ```sh
 umask 077
 openssl rand -base64 48 > /root/.bmca
-/opt/bmca/scripts/initialize-bmca.sh --environment prod
+/opt/bmca/scripts/initialize-bmca.sh --env prod
 ```
 
 This one command creates and configures the CA, installs `ca.json` and the
@@ -25,7 +25,7 @@ health. Local root CA material is retained under
 `/var/lib/bmca/root-ca`; it is deliberately not copied into the step-ca
 runtime secrets. BMCA's encrypted backup includes it.
 
-Use `--environment dev` on Sally.
+Use `--env dev` on Sally.
 
 Verify the resulting installation:
 
@@ -42,7 +42,7 @@ enabled
 ```
 
 ```sh
-/opt/bmca/scripts/validate-ca.sh --environment prod
+/opt/bmca/scripts/validate-ca.sh --env prod
 [SUCCESS] prod CA validation passed.
 ```
 

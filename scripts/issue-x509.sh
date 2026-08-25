@@ -2,13 +2,13 @@
 set -Eeuo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"; source "$SCRIPT_DIR/lib/common.sh"
 
-usage() { printf 'Usage: %s --environment dev|prod --kind web-server|mariadb-server|mariadb-replication|mariadb-client|admin-client --subject NAME --output-dir DIR --provisioner-password-file FILE --key-password-file FILE [--san NAME]... [--lifetime DURATION]\n' "$(basename "$0")"; }
+usage() { printf 'Usage: %s --env dev|prod --kind web-server|mariadb-server|mariadb-replication|mariadb-client|admin-client --subject NAME --output-dir DIR --provisioner-password-file FILE --key-password-file FILE [--san NAME]... [--lifetime DURATION]\n' "$(basename "$0")"; }
 
 main() {
     local environment='' kind='' subject='' output='' provisioner_password='' key_password='' lifetime=''
     local -a sans=()
     while (($#)); do case $1 in
-        --environment) environment=$2; shift 2;; --kind) kind=$2; shift 2;;
+        --env) environment=$2; shift 2;; --kind) kind=$2; shift 2;;
         --subject) subject=$2; shift 2;; --output-dir) output=$2; shift 2;;
         --provisioner-password-file) provisioner_password=$2; shift 2;;
         --key-password-file) key_password=$2; shift 2;; --san) sans+=("$2"); shift 2;;
