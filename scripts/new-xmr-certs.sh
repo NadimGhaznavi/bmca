@@ -48,24 +48,29 @@ main() {
 
     # Development
     issue_server web-server xmr-dev.osoyalce.com
+    issue_server web-server xmr-app-dev.osoyalce.com
     issue_server web-server xmr-admin-dev.osoyalce.com
     issue_server mariadb-server xmr-db-dev.osoyalce.com
 
     # QA
     issue_server web-server xmr-qa.osoyalce.com
     issue_server web-server xmr1-qa.osoyalce.com
+    issue_server web-server xmr-app1-qa.osoyalce.com
     issue_server web-server xmr-admin1-qa.osoyalce.com
     issue_server mariadb-server xmr-db1-qa.osoyalce.com
     issue_server web-server xmr2-qa.osoyalce.com
+    issue_server web-server xmr-app2-qa.osoyalce.com
     issue_server web-server xmr-admin2-qa.osoyalce.com
     issue_server mariadb-server xmr-db2-qa.osoyalce.com
 
     # Production
     issue_server web-server xmr.osoyalce.com
     issue_server web-server xmr1.osoyalce.com
+    issue_server web-server xmr-app1.osoyalce.com
     issue_server web-server xmr-admin1.osoyalce.com
     issue_server mariadb-server xmr-db1.osoyalce.com
     issue_server web-server xmr2.osoyalce.com
+    issue_server web-server xmr-app2.osoyalce.com
     issue_server web-server xmr-admin2.osoyalce.com
     issue_server mariadb-server xmr-db2.osoyalce.com
 

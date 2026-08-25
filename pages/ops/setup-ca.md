@@ -41,8 +41,29 @@ Output:
 enabled
 ```
 
+Perform a validation check:
+
 ```sh
 /opt/bmca/scripts/validate-ca.sh --env prod
+```
+
+Example output:
+
+```
+[PASS] test paris = paris
+[PASS] test -x /usr/bin/step
+[PASS] test -x /usr/bin/step-ca
+[PASS] test -f /etc/step-ca/ca.json
+[PASS] test ! -e /var/lib/step-ca/secrets/root_ca_key
+[PASS] test -f /var/lib/step-ca/certs/root_ca.crt
+[PASS] test -f /var/lib/step-ca/certs/intermediate_ca.crt
+[PASS] test -f /var/lib/step-ca/secrets/ssh_host_ca_key
+[PASS] test -f /var/lib/step-ca/secrets/ssh_user_ca_key
+/var/lib/step-ca/certs/intermediate_ca.crt: OK
+[PASS] openssl verify -CAfile /var/lib/step-ca/certs/root_ca.crt /var/lib/step-ca/certs/intermediate_ca.crt
+[PASS] systemctl is-active --quiet step-ca.service
+{"status":"ok"}
+[PASS] curl --fail --silent --show-error --retry 10 --retry-delay 1 --retry-connrefused --cacert /var/lib/step-ca/certs/root_ca.crt https://ca.osoyalce.com:9000/health
 [SUCCESS] prod CA validation passed.
 ```
 
