@@ -10,7 +10,7 @@ usage() {
 }
 
 main() {
-    local output_dir="$PWD/new-certs"
+    local output_dir="$PWD/certs"
     local provisioner_password_file='/root/.bmca'
     local key_password_file='/root/.bmca-leaf'
     local lifetime=''
@@ -38,19 +38,18 @@ main() {
     require_file "$STEP_CA_CERTS_DIR/root_ca.crt"
     require_file "$STEP_CA_CERTS_DIR/intermediate_ca.crt"
 
-    local output_parent archive checksum environment
+    local output_parent work_dir certificate_dir bundle_dir
     output_parent=$(dirname -- "$output_dir")
     [[ -d $output_parent ]] || die "Output parent directory does not exist: $output_parent"
-    for environment in dev qa prod; do
-        archive="$output_parent/xmr-certs-$environment.tar.gz"
-        checksum="$archive.sha256"
-        [[ ! -e $archive ]] || die "Archive already exists: $archive"
-        [[ ! -e $checksum ]] || die "Checksum already exists: $checksum"
-    done
+    work_dir=$(mktemp -d /tmp/xmr-certs.XXXXXX)
+    trap 'rm -rf -- "$work_dir"' EXIT
+    certificate_dir="$work_dir/certificates"
+    bundle_dir="$work_dir/bundles"
+    mkdir -m 0700 "$certificate_dir" "$bundle_dir"
 
     local -a common_args=(
         --env prod
-        --output-dir "$output_dir"
+        --output-dir "$certificate_dir"
         --provisioner-password-file "$provisioner_password_file"
         --key-password-file "$key_password_file"
     )
@@ -110,22 +109,21 @@ main() {
     create_bundle() (
         local bundle_environment=$1
         shift
-        local bundle_archive="$output_parent/xmr-certs-$bundle_environment.tar.gz"
+        local bundle_archive="$bundle_dir/xmr-certs-$bundle_environment.tar.gz"
         local staging dns_name
-        staging=$(mktemp -d "/tmp/xmr-certs-$bundle_environment.XXXXXX")
-        trap 'rm -rf -- "$staging"' EXIT
-        chmod 0700 "$staging"
+        staging="$work_dir/staging-$bundle_environment"
+        mkdir -m 0700 "$staging"
         mkdir -m 0700 "$staging/certificates"
         install -m 0644 "$STEP_CA_CERTS_DIR/root_ca.crt" "$staging/root_ca.crt"
         install -m 0644 "$STEP_CA_CERTS_DIR/intermediate_ca.crt" "$staging/intermediate_ca.crt"
         for dns_name in "$@"; do
-            install -m 0644 "$output_dir/$dns_name.crt" "$staging/certificates/$dns_name.crt"
-            install -m 0600 "$output_dir/$dns_name.key" "$staging/certificates/$dns_name.key"
+            install -m 0644 "$certificate_dir/$dns_name.crt" "$staging/certificates/$dns_name.crt"
+            install -m 0600 "$certificate_dir/$dns_name.key" "$staging/certificates/$dns_name.key"
         done
         tar -C "$staging" -czf "$bundle_archive" root_ca.crt intermediate_ca.crt certificates
         chmod 0600 "$bundle_archive"
         (
-            cd -- "$output_parent"
+            cd -- "$bundle_dir"
             sha256sum "$(basename -- "$bundle_archive")" >"$(basename -- "$bundle_archive").sha256"
         )
         chmod 0600 "$bundle_archive.sha256"
@@ -135,7 +133,10 @@ main() {
     create_bundle qa "${qa_certificates[@]}"
     create_bundle prod "${prod_certificates[@]}"
 
-    success "Generated XMR certificates in $output_dir and environment archives in $output_parent"
+    mkdir -m 0700 "$output_dir"
+    install -m 0600 "$bundle_dir"/* "$output_dir/"
+
+    success "Generated XMR certificate archives in $output_dir"
 }
 
 main "$@"
