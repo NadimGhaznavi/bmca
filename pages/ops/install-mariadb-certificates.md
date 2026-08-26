@@ -12,6 +12,16 @@ This page provides a procedure for installing an SSL certificate into MariaDb.
 
 ---
 
+# Pre-Requisites
+
+Ensure that the `/root/.bmca-leaf` file exists. If it does not then, as **root**:
+
+```sh
+cd /root
+scp root@paris:/root/.bmca .
+```
+
+---
 
 # Transfer the Certificate Files
 
@@ -34,22 +44,61 @@ The command must report `xmr-certs-dev.tar.gz: OK`. Do not extract or install fi
 
 ---
 
-# Install the certificates
+# Extract the Files
 
-**TBD** Make sure the targets match what's in the INI (see below).
+Create a root-only staging directory and extract only the CA certificates and the DEV MariaDB server certificate/key pair:
+
+```sh
+install -d -m 0700 /root/bmca-transfer/xmr-db-dev
+tar -xzf xmr-certs-dev.tar.gz \
+  -C /root/bmca-transfer/xmr-db-dev \
+  --no-same-owner \
+  root_ca.crt \
+  intermediate_ca.crt \
+  certificates/xmr-db-dev.osoyalce.com.crt \
+  certificates/xmr-db-dev.osoyalce.com.key
+```
+
+Only these four files are extracted; the certificates and private keys for the other DEV services remain in the archive.
+
+---
+
+# Install the Files
+
+Install the root CA using MariaDB's existing generic filename. Create `server-cert.pem` as a full server certificate chain containing the leaf certificate followed by the intermediate certificate:
+
+```sh
+cd /root/bmca-transfer/xmr-db-dev
+install -o root -g mysql -m 0644 root_ca.crt /etc/mysql/cacert.pem
+install -o root -g mysql -m 0644 /dev/null /etc/mysql/server-cert.pem
+cat certificates/xmr-db-dev.osoyalce.com.crt \
+  intermediate_ca.crt > /etc/mysql/server-cert.pem
+```
+
+Decrypt and install the MariaDB runtime key using the separately transferred key-password file. MariaDB must be able to start without prompting for this password:
+
+```sh
+umask 077
+openssl pkey \
+  -in certificates/xmr-db-dev.osoyalce.com.key \
+  -passin file:/root/.bmca-leaf \
+  -out /etc/mysql/server-key.pem
+chown root:mysql /etc/mysql/server-key.pem
+chmod 0640 /etc/mysql/server-key.pem
+```
 
 ---
 
 # Configure MariaDB
 
-Edit the `/etc/mysql/mariadb.conf.d/50-server.cnf` and make sure the following lines 
+Edit `/etc/mysql/mariadb.conf.d/50-server.cnf` and make sure it contains these settings:
 
 ```ini
 [mariadb]
-ssl_ca=/etc/mysql/tls/root_ca.crt
-ssl_cert=/etc/mysql/tls/REPLACE_WITH_SUBJECT.crt
-ssl_key=/etc/mysql/tls/server.key
-require_secure_transport=ON
+ssl-ca = /etc/mysql/cacert.pem
+ssl-cert = /etc/mysql/server-cert.pem
+ssl-key = /etc/mysql/server-key.pem
+require-secure-transport = ON
 ```
 
 ---
