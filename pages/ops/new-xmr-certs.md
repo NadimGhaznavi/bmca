@@ -19,28 +19,29 @@ cd /desired/parent/directory
 
 ---
 
-# Output is 22 New Certificates
+# Output
 
-The script generates 22 certificate/key pairs in `./new-certs`:
+The script generates 22 certificate/key pairs in a temporary, root-only workspace:
 
 - Web, app, admin, and cluster names use `web-server`.
 - Database names use `mariadb-server`.
 - Every certificate uses `--env prod`.
 - Default password files are `/root/.bmca` and `/root/.bmca-leaf`.
 
-The output directory must not already exist. Static and CLI tests pass.
+The temporary workspace is removed automatically. Loose certificate and key files are not retained after the archives have been created. Static and CLI tests pass.
 
 ## Environment Archives
 
-After issuing all certificates successfully, the script creates three deployment archives and a SHA-256 checksum for each one in the parent directory of `new-certs`:
+After issuing all certificates successfully, the script creates `./certs` containing only three deployment archives and a SHA-256 checksum for each one:
 
 ```text
-xmr-certs-dev.tar.gz
-xmr-certs-dev.tar.gz.sha256
-xmr-certs-qa.tar.gz
-xmr-certs-qa.tar.gz.sha256
-xmr-certs-prod.tar.gz
-xmr-certs-prod.tar.gz.sha256
+certs/
+├── xmr-certs-dev.tar.gz
+├── xmr-certs-dev.tar.gz.sha256
+├── xmr-certs-qa.tar.gz
+├── xmr-certs-qa.tar.gz.sha256
+├── xmr-certs-prod.tar.gz
+└── xmr-certs-prod.tar.gz.sha256
 ```
 
 The DEV archive contains 4 certificate/key pairs. The QA and PROD archives each contain 9 certificate/key pairs. Every archive has this layout:
@@ -54,7 +55,7 @@ certificates/
 
 The archives, checksum files, and private keys are created with mode `0600`. The private keys remain encrypted with the password from `/root/.bmca-leaf`; gzip compression does not provide encryption. All three archives contain the production CA chain because every XMR certificate is issued with `--env prod`.
 
-The script refuses to overwrite an existing output directory, archive, or checksum file. Verify and extract an archive on its target system with commands such as:
+The output directory is created with mode `0700`, and the script refuses to overwrite an existing output directory. Verify and extract an archive on its target system with commands such as:
 
 ```sh
 sha256sum -c xmr-certs-qa.tar.gz.sha256
