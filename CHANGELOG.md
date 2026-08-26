@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Updated the MariaDb cert install docs
+
+---
+
 ## [Release 0.6.6] - 2026-08-26 03:48 EDT
 
 - Grouped the XMR Pool certs into *dev*, *qa*, and *prod* bundles
