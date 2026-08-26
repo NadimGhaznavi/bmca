@@ -8,20 +8,29 @@ layout: single
 
 # Introduction
 
-This page provides a procedure for installing an SSL certificate for MariaDb.
+This page provides a procedure for installing an SSL certificate into MariaDb.
 
 ---
 
 
-# Retrieve the Certificate and Key Files
+# Transfer the Certificate Files
 
-Issue the commands below on the database server. In this example, the Certificate Authority is running on `paris`.
+Run these commands on the database server. This example retrieves the DEV archive and its checksum from the production Certificate Authority on `paris`:
 
 ```sh
-scp paris:/var/lib/step-ca/certs/root_ca.crt .
-scp paris:/root/new-certs/xmr-db-dev.osoyalce.com.crt .
-scp paris:/root/new-certs/xmr-db-dev.osoyalce.com.key .
+install -d -m 0700 /root/bmca-transfer
+cd /root/bmca-transfer
+scp root@paris:/root/certs/xmr-certs-dev.tar.gz .
+scp root@paris:/root/certs/xmr-certs-dev.tar.gz.sha256 .
 ```
+
+Verify the tarball against the transferred SHA-256 checksum file:
+
+```sh
+sha256sum -c xmr-certs-dev.tar.gz.sha256
+```
+
+The command must report `xmr-certs-dev.tar.gz: OK`. Do not extract or install files from the archive if verification fails.
 
 ---
 
