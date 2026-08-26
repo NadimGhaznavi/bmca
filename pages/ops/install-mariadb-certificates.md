@@ -6,29 +6,34 @@ layout: single
 
 ![BMCA Logo](/pages/images/bmca-logo.png)
 
-# Install MariaDB Certificates
+# Introduction
 
-Verify and extract the transferred MariaDB server archive:
+This page provides a procedure for installing an SSL certificate for MariaDb.
 
-```sh
-root@db01:~ # cd /root/bmca-transfer
-root@db01:/root/bmca-transfer # sha256sum -c db01.tar.sha256
-root@db01:/root/bmca-transfer # tar -xf db01.tar
-root@db01:/root/bmca-transfer # cd db01
-```
+---
 
-Install the certificate and decrypt the key:
+
+# Retrieve the Certificate and Key Files
+
+Issue the commands below on the database server. In this example, the Certificate Authority is running on `paris`.
 
 ```sh
-root@db01:/root/bmca-transfer/db01 # install -d -o mysql -g mysql -m 0750 /etc/mysql/tls
-root@db01:/root/bmca-transfer/db01 # install -o mysql -g mysql -m 0644 *.crt /etc/mysql/tls/
-root@db01:/root/bmca-transfer/db01 # openssl pkey -in REPLACE_WITH_SUBJECT.key \
-  -passin file:/root/.bmca-leaf -out /etc/mysql/tls/server.key
-root@db01:/root/bmca-transfer/db01 # chown mysql:mysql /etc/mysql/tls/server.key
-root@db01:/root/bmca-transfer/db01 # chmod 0600 /etc/mysql/tls/server.key
+scp paris:/var/lib/step-ca/certs/root_ca.crt .
+scp paris:/root/new-certs/xmr-db-dev.osoyalce.com.crt .
+scp paris:/root/new-certs/xmr-db-dev.osoyalce.com.key .
 ```
 
-Configure MariaDB:
+---
+
+# Install the certificates
+
+**TBD** Make sure the targets match what's in the INI (see below).
+
+---
+
+# Configure MariaDB
+
+Edit the `/etc/mysql/mariadb.conf.d/50-server.cnf` and make sure the following lines 
 
 ```ini
 [mariadb]
@@ -38,9 +43,11 @@ ssl_key=/etc/mysql/tls/server.key
 require_secure_transport=ON
 ```
 
-Restart and verify:
+---
+
+# Restart and verify
 
 ```sh
-root@db01:~ # systemctl restart mariadb
-root@db01:~ # mariadb -e "SHOW VARIABLES WHERE Variable_name IN ('have_ssl','ssl_ca','ssl_cert','ssl_key','require_secure_transport');"
+systemctl restart mariadb
+mariadb -e "SHOW VARIABLES WHERE Variable_name IN ('have_ssl','ssl_ca','ssl_cert','ssl_key','require_secure_transport');"
 ```
