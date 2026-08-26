@@ -28,6 +28,25 @@ main() {
 
     [[ $output_dir == /* ]] || output_dir="$PWD/$output_dir"
     [[ ! -e $output_dir ]] || die "Output directory already exists: $output_dir"
+    umask 077
+
+    load_settings
+    require_command tar
+    require_command gzip
+    require_command sha256sum
+    require_command install
+    require_file "$STEP_CA_CERTS_DIR/root_ca.crt"
+    require_file "$STEP_CA_CERTS_DIR/intermediate_ca.crt"
+
+    local output_parent archive checksum environment
+    output_parent=$(dirname -- "$output_dir")
+    [[ -d $output_parent ]] || die "Output parent directory does not exist: $output_parent"
+    for environment in dev qa prod; do
+        archive="$output_parent/xmr-certs-$environment.tar.gz"
+        checksum="$archive.sha256"
+        [[ ! -e $archive ]] || die "Archive already exists: $archive"
+        [[ ! -e $checksum ]] || die "Checksum already exists: $checksum"
+    done
 
     local -a common_args=(
         --env prod
@@ -46,35 +65,77 @@ main() {
             --san "$dns_name"
     }
 
-    # Development
-    issue_server web-server xmr-dev.osoyalce.com
-    issue_server web-server xmr-app-dev.osoyalce.com
-    issue_server web-server xmr-admin-dev.osoyalce.com
-    issue_server mariadb-server xmr-db-dev.osoyalce.com
+    local -a dev_certificates=(
+        xmr-dev.osoyalce.com
+        xmr-app-dev.osoyalce.com
+        xmr-admin-dev.osoyalce.com
+        xmr-db-dev.osoyalce.com
+    )
+    local -a qa_certificates=(
+        xmr-qa.osoyalce.com
+        xmr1-qa.osoyalce.com
+        xmr-app1-qa.osoyalce.com
+        xmr-admin1-qa.osoyalce.com
+        xmr-db1-qa.osoyalce.com
+        xmr2-qa.osoyalce.com
+        xmr-app2-qa.osoyalce.com
+        xmr-admin2-qa.osoyalce.com
+        xmr-db2-qa.osoyalce.com
+    )
+    local -a prod_certificates=(
+        xmr.osoyalce.com
+        xmr1.osoyalce.com
+        xmr-app1.osoyalce.com
+        xmr-admin1.osoyalce.com
+        xmr-db1.osoyalce.com
+        xmr2.osoyalce.com
+        xmr-app2.osoyalce.com
+        xmr-admin2.osoyalce.com
+        xmr-db2.osoyalce.com
+    )
 
-    # QA
-    issue_server web-server xmr-qa.osoyalce.com
-    issue_server web-server xmr1-qa.osoyalce.com
-    issue_server web-server xmr-app1-qa.osoyalce.com
-    issue_server web-server xmr-admin1-qa.osoyalce.com
-    issue_server mariadb-server xmr-db1-qa.osoyalce.com
-    issue_server web-server xmr2-qa.osoyalce.com
-    issue_server web-server xmr-app2-qa.osoyalce.com
-    issue_server web-server xmr-admin2-qa.osoyalce.com
-    issue_server mariadb-server xmr-db2-qa.osoyalce.com
+    issue_environment() {
+        local dns_name kind
+        for dns_name in "$@"; do
+            kind=web-server
+            [[ $dns_name != xmr-db* ]] || kind=mariadb-server
+            issue_server "$kind" "$dns_name"
+        done
+    }
 
-    # Production
-    issue_server web-server xmr.osoyalce.com
-    issue_server web-server xmr1.osoyalce.com
-    issue_server web-server xmr-app1.osoyalce.com
-    issue_server web-server xmr-admin1.osoyalce.com
-    issue_server mariadb-server xmr-db1.osoyalce.com
-    issue_server web-server xmr2.osoyalce.com
-    issue_server web-server xmr-app2.osoyalce.com
-    issue_server web-server xmr-admin2.osoyalce.com
-    issue_server mariadb-server xmr-db2.osoyalce.com
+    issue_environment "${dev_certificates[@]}"
+    issue_environment "${qa_certificates[@]}"
+    issue_environment "${prod_certificates[@]}"
 
-    success "Generated XMR certificates in $output_dir"
+    create_bundle() (
+        local bundle_environment=$1
+        shift
+        local bundle_archive="$output_parent/xmr-certs-$bundle_environment.tar.gz"
+        local staging dns_name
+        staging=$(mktemp -d "/tmp/xmr-certs-$bundle_environment.XXXXXX")
+        trap 'rm -rf -- "$staging"' EXIT
+        chmod 0700 "$staging"
+        mkdir -m 0700 "$staging/certificates"
+        install -m 0644 "$STEP_CA_CERTS_DIR/root_ca.crt" "$staging/root_ca.crt"
+        install -m 0644 "$STEP_CA_CERTS_DIR/intermediate_ca.crt" "$staging/intermediate_ca.crt"
+        for dns_name in "$@"; do
+            install -m 0644 "$output_dir/$dns_name.crt" "$staging/certificates/$dns_name.crt"
+            install -m 0600 "$output_dir/$dns_name.key" "$staging/certificates/$dns_name.key"
+        done
+        tar -C "$staging" -czf "$bundle_archive" root_ca.crt intermediate_ca.crt certificates
+        chmod 0600 "$bundle_archive"
+        (
+            cd -- "$output_parent"
+            sha256sum "$(basename -- "$bundle_archive")" >"$(basename -- "$bundle_archive").sha256"
+        )
+        chmod 0600 "$bundle_archive.sha256"
+    )
+
+    create_bundle dev "${dev_certificates[@]}"
+    create_bundle qa "${qa_certificates[@]}"
+    create_bundle prod "${prod_certificates[@]}"
+
+    success "Generated XMR certificates in $output_dir and environment archives in $output_parent"
 }
 
 main "$@"
