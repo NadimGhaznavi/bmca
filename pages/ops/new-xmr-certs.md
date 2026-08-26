@@ -30,6 +30,37 @@ The script generates 22 certificate/key pairs in `./new-certs`:
 
 The output directory must not already exist. Static and CLI tests pass.
 
+## Environment Archives
+
+After issuing all certificates successfully, the script creates three deployment archives and a SHA-256 checksum for each one in the parent directory of `new-certs`:
+
+```text
+xmr-certs-dev.tar.gz
+xmr-certs-dev.tar.gz.sha256
+xmr-certs-qa.tar.gz
+xmr-certs-qa.tar.gz.sha256
+xmr-certs-prod.tar.gz
+xmr-certs-prod.tar.gz.sha256
+```
+
+The DEV archive contains 4 certificate/key pairs. The QA and PROD archives each contain 9 certificate/key pairs. Every archive has this layout:
+
+```text
+root_ca.crt
+intermediate_ca.crt
+certificates/
+  <environment-specific certificate and encrypted key files>
+```
+
+The archives, checksum files, and private keys are created with mode `0600`. The private keys remain encrypted with the password from `/root/.bmca-leaf`; gzip compression does not provide encryption. All three archives contain the production CA chain because every XMR certificate is issued with `--env prod`.
+
+The script refuses to overwrite an existing output directory, archive, or checksum file. Verify and extract an archive on its target system with commands such as:
+
+```sh
+sha256sum -c xmr-certs-qa.tar.gz.sha256
+tar -xzf xmr-certs-qa.tar.gz
+```
+
 ---
 
 # XMR Pool Project DNS
