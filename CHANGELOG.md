@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Updated path to the NFS bmca backup directory
+
+---
+
 ## [Release 0.7.0] - 2026-08-26 04:24 EDT
 
 - Updated the MariaDb cert install docs
