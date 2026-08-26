@@ -28,10 +28,13 @@ main() {
 
     [[ $output_dir == /* ]] || output_dir="$PWD/$output_dir"
     [[ ! -e $output_dir ]] || die "Output directory already exists: $output_dir"
+    umask 077
 
     load_settings
     require_command tar
+    require_command gzip
     require_command sha256sum
+    require_command install
     require_file "$STEP_CA_CERTS_DIR/root_ca.crt"
     require_file "$STEP_CA_CERTS_DIR/intermediate_ca.crt"
 
