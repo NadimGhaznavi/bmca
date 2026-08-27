@@ -28,13 +28,15 @@ test -d "$DEV_BACKUP_TARGET_DIR"
 Install development on Sally:
 
 ```sh
-./scripts/install.sh --env dev
+./scripts/install-ca.sh --env dev
 ```
+
+The installer always performs a clean installation. After confirmation, it stops the existing CA and permanently removes all prior BMCA and Smallstep configuration and state. Existing CA identity, keys, provisioners, database contents, and issued certificates are not preserved.
 
 output:
 
 ```sh
-[SUCCESS] Installed bmca REPLACE_WITH_VERSION for dev. Initialize or restore the complete CA before enabling the service.
+[SUCCESS] Clean-installed bmca REPLACE_WITH_VERSION for dev. Run initialize-bmca.sh to create the CA.
 ```
 
 Verify the installation:
@@ -51,12 +53,7 @@ Output:
 disabled
 ```
 
-Continue with [Set Up CA](/pages/ops/setup-ca) for a new CA or
-[Restore CA](/pages/ops/restore-ca) when rebuilding the host.
-
-When reinstalling BMCA with an existing CA in `/etc/step-ca` and
-`/var/lib/step-ca`, the installer enables and starts `step-ca.service`
-automatically.
+Continue with [Set Up CA](/pages/ops/setup-ca), then regenerate and redeploy all project certificates.
 
 BMCA currently supports `dev` on Sally and `prod` on Paris. Use the matching
 environment in every command; scripts reject execution on the wrong host.
