@@ -55,7 +55,8 @@ main() {
     [[ ${XMR_CERT_SOURCE_DIR:-} == /* ]] || die "XMR_CERT_SOURCE_DIR must be an absolute path."
     local configured_path
     for configured_path in "$TARGET_LEAF_KEY_PASSWORD_FILE" "$MARIADB_CA_FILE" \
-        "$MARIADB_CERT_FILE" "$MARIADB_KEY_FILE" "$MARIADB_CERT_BACKUP_DIR"; do
+        "$MARIADB_CERT_FILE" "$MARIADB_KEY_FILE" "$MARIADB_CLIENT_CONFIG_FILE" \
+        "$MARIADB_CERT_BACKUP_DIR"; do
         [[ $configured_path == /* ]] || die "Target paths must be absolute: $configured_path"
     done
     [[ -n $MARIADB_GROUP && -n $MARIADB_SERVICE ]] ||
@@ -63,7 +64,7 @@ main() {
 
     umask 077
     local work_dir archive_name checksum_name leaf_cert encrypted_key
-    local server_cert server_key backup_root backup_dir timestamp deployed_file
+    local server_cert server_key client_config backup_root backup_dir timestamp deployed_file
     work_dir=$(mktemp -d /tmp/install-db-cert.XXXXXX)
     DB_CERT_WORK_DIR=$work_dir
     trap cleanup EXIT
@@ -73,6 +74,7 @@ main() {
     encrypted_key="$work_dir/certificates/$subject.key"
     server_cert="$work_dir/server-cert.pem"
     server_key="$work_dir/server-key.pem"
+    client_config="$work_dir/60-bmca-client.cnf"
 
     info "Retrieving $archive_name from $XMR_CERT_SOURCE_HOST"
     scp -o BatchMode=yes \
@@ -113,21 +115,22 @@ main() {
         die "Certificate and private key do not match."
 
     cp -- "$leaf_cert" "$server_cert"
-    printf '\n' >>"$server_cert"
-    sed -n '/-----BEGIN CERTIFICATE-----/,$p' "$work_dir/intermediate_ca.crt" >>"$server_cert"
+    printf '[client]\nssl-ca = %s\n' "$MARIADB_CA_FILE" >"$client_config"
 
     timestamp=$(date -u +%Y%m%dT%H%M%SZ)
     backup_root=$MARIADB_CERT_BACKUP_DIR
     install -d -o root -g root -m 0700 "$backup_root"
     backup_dir=$(mktemp -d "$backup_root/mariadb-certificates-$timestamp.XXXXXX")
     chmod 0700 "$backup_dir"
-    for deployed_file in "$MARIADB_CA_FILE" "$MARIADB_CERT_FILE" "$MARIADB_KEY_FILE"; do
+    for deployed_file in "$MARIADB_CA_FILE" "$MARIADB_CERT_FILE" "$MARIADB_KEY_FILE" \
+        "$MARIADB_CLIENT_CONFIG_FILE"; do
         [[ ! -e $deployed_file ]] || cp -a -- "$deployed_file" "$backup_dir/"
     done
 
     install -o root -g "$MARIADB_GROUP" -m 0644 "$work_dir/root_ca.crt" "$MARIADB_CA_FILE"
     install -o root -g "$MARIADB_GROUP" -m 0644 "$server_cert" "$MARIADB_CERT_FILE"
     install -o root -g "$MARIADB_GROUP" -m 0640 "$server_key" "$MARIADB_KEY_FILE"
+    install -o root -g root -m 0644 "$client_config" "$MARIADB_CLIENT_CONFIG_FILE"
 
     systemctl restart "$MARIADB_SERVICE"
 

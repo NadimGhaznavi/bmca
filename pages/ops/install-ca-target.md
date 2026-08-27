@@ -78,6 +78,7 @@ MARIADB_SERVICE="mariadb"
 MARIADB_CA_FILE="/etc/mysql/cacert.pem"
 MARIADB_CERT_FILE="/etc/mysql/server-cert.pem"
 MARIADB_KEY_FILE="/etc/mysql/server-key.pem"
+MARIADB_CLIENT_CONFIG_FILE="/etc/mysql/mariadb.conf.d/60-bmca-client.cnf"
 MARIADB_CERT_BACKUP_DIR="/var/backups/bmca"
 ```
 
