@@ -40,7 +40,8 @@ This section outlines supported BMCA operational procedures.
 
 ## Target Host Operations
 
-1. [Install MariaDB Certificate](/pages/ops/install-mariadb-certificate)
-2. [Manual MariaDB Certificate Install](/pages/ops/manual-mariadb-certificate-install)
-3. [Install Python Database Certificate](/pages/ops/install-python-db-certificate)
-4. [Install Caddy Certificates](/pages/ops/install-caddy-certificates)
+- [Install BMCA on a Certificate Target](/pages/ops/install-ca-target)
+- [Install MariaDB Certificate](/pages/ops/install-mariadb-certificate)
+- [Manual MariaDB Certificate Install](/pages/ops/manual-mariadb-certificate-install)
+- [Install Python Database Certificate](/pages/ops/install-python-db-certificate)
+- [Install Caddy Certificates](/pages/ops/install-caddy-certificates)

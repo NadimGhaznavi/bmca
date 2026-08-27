@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+BMCA_SETTINGS="${BMCA_SETTINGS:-$SCRIPT_DIR/../conf/target-settings.cfg}"
 # shellcheck source=lib/common.sh
 source "$SCRIPT_DIR/lib/common.sh"
 
@@ -16,7 +17,7 @@ usage() {
 }
 
 main() {
-    local environment='' subject='' key_password_file='/root/.bmca-leaf'
+    local environment='' subject='' key_password_file=''
 
     while (($#)); do
         case $1 in
@@ -41,6 +42,7 @@ main() {
 
     require_root
     load_settings
+    key_password_file=${key_password_file:-$TARGET_LEAF_KEY_PASSWORD_FILE}
     require_command scp
     require_command sha256sum
     require_command tar
@@ -51,10 +53,17 @@ main() {
     check_secret_mode "$key_password_file"
     [[ -n ${XMR_CERT_SOURCE_HOST:-} ]] || die "XMR_CERT_SOURCE_HOST is not configured."
     [[ ${XMR_CERT_SOURCE_DIR:-} == /* ]] || die "XMR_CERT_SOURCE_DIR must be an absolute path."
+    local configured_path
+    for configured_path in "$TARGET_LEAF_KEY_PASSWORD_FILE" "$MARIADB_CA_FILE" \
+        "$MARIADB_CERT_FILE" "$MARIADB_KEY_FILE" "$MARIADB_CERT_BACKUP_DIR"; do
+        [[ $configured_path == /* ]] || die "Target paths must be absolute: $configured_path"
+    done
+    [[ -n $MARIADB_GROUP && -n $MARIADB_SERVICE ]] ||
+        die "MariaDB group and service settings are required."
 
     umask 077
     local work_dir archive_name checksum_name leaf_cert encrypted_key
-    local server_cert server_key backup_root backup_dir timestamp file
+    local server_cert server_key backup_root backup_dir timestamp deployed_file
     work_dir=$(mktemp -d /tmp/install-db-cert.XXXXXX)
     DB_CERT_WORK_DIR=$work_dir
     trap cleanup EXIT
@@ -108,19 +117,19 @@ main() {
     sed -n '/-----BEGIN CERTIFICATE-----/,$p' "$work_dir/intermediate_ca.crt" >>"$server_cert"
 
     timestamp=$(date -u +%Y%m%dT%H%M%SZ)
-    backup_root='/var/backups/bmca'
+    backup_root=$MARIADB_CERT_BACKUP_DIR
     install -d -o root -g root -m 0700 "$backup_root"
     backup_dir=$(mktemp -d "$backup_root/mariadb-certificates-$timestamp.XXXXXX")
     chmod 0700 "$backup_dir"
-    for file in cacert.pem server-cert.pem server-key.pem; do
-        [[ ! -e /etc/mysql/$file ]] || cp -a -- "/etc/mysql/$file" "$backup_dir/"
+    for deployed_file in "$MARIADB_CA_FILE" "$MARIADB_CERT_FILE" "$MARIADB_KEY_FILE"; do
+        [[ ! -e $deployed_file ]] || cp -a -- "$deployed_file" "$backup_dir/"
     done
 
-    install -o root -g mysql -m 0644 "$work_dir/root_ca.crt" /etc/mysql/cacert.pem
-    install -o root -g mysql -m 0644 "$server_cert" /etc/mysql/server-cert.pem
-    install -o root -g mysql -m 0640 "$server_key" /etc/mysql/server-key.pem
+    install -o root -g "$MARIADB_GROUP" -m 0644 "$work_dir/root_ca.crt" "$MARIADB_CA_FILE"
+    install -o root -g "$MARIADB_GROUP" -m 0644 "$server_cert" "$MARIADB_CERT_FILE"
+    install -o root -g "$MARIADB_GROUP" -m 0640 "$server_key" "$MARIADB_KEY_FILE"
 
-    systemctl restart mariadb
+    systemctl restart "$MARIADB_SERVICE"
 
     success "Installed MariaDB certificate for $subject (previous files: $backup_dir)"
 }
