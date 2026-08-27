@@ -15,7 +15,7 @@ require_file() { [[ -f "$1" ]] || die "Required file not found: $1"; }
 
 load_settings() {
     require_file "$BMCA_SETTINGS"
-    # settings.cfg is repository-controlled and must contain assignments only.
+    # The selected settings file is repository-controlled and must contain assignments only.
     # shellcheck source=/dev/null
     source "$BMCA_SETTINGS"
 }
