@@ -37,16 +37,23 @@ main() {
     [[ $($STEP_CA_BIN version) == *"/$STEP_CA_VERSION "* ]] || die "Unexpected step-ca version."
     [[ -d $BACKUP_TARGET_DIR ]] || die "Backup target does not exist: $BACKUP_TARGET_DIR"
 
-    local service_was_active=0 install_complete=0
-    systemctl is-active --quiet step-ca.service && service_was_active=1
-    restore_service() {
-        if ((install_complete == 0 && service_was_active)); then
-            systemctl daemon-reload || true
-            systemctl start step-ca.service || true
-        fi
-    }
-    trap restore_service EXIT
-    ((service_was_active == 0)) || systemctl stop step-ca.service
+    confirm "Permanently remove all existing BMCA and step-ca configuration/state and install a clean $environment CA?"
+
+    assert_safe_absolute_path "$INSTALL_DIR"
+    assert_safe_absolute_path "$BMCA_CONFIG_DIR"
+    assert_safe_absolute_path "$BMCA_STATE_DIR"
+    assert_safe_absolute_path "$STEP_CA_CONFIG_DIR"
+    assert_safe_absolute_path "$STEP_CA_STATE_DIR"
+    assert_safe_absolute_path "$SYSTEMD_UNIT_FILE"
+
+    systemctl disable --now step-ca.service 2>/dev/null || true
+    rm -f -- "$SYSTEMD_UNIT_FILE"
+    rm -rf -- "$INSTALL_DIR"
+    rm -rf -- "$BMCA_CONFIG_DIR"
+    rm -rf -- "$BMCA_STATE_DIR"
+    rm -rf -- "$STEP_CA_CONFIG_DIR"
+    rm -rf -- "$STEP_CA_STATE_DIR"
+    systemctl daemon-reload
 
     getent group "$STEP_CA_GROUP" >/dev/null || groupadd --system "$STEP_CA_GROUP"
     id "$STEP_CA_USER" >/dev/null 2>&1 ||
@@ -70,19 +77,8 @@ main() {
     printf '%s\n' "$BMCA_ENV" >"$INSTALL_CONF_DIR/environment"
     chmod 0644 "$INSTALL_CONF_DIR/environment"
     systemctl daemon-reload
-    if [[ -f $STEP_CA_CONFIG_FILE && -f $STEP_CA_PASSWORD_FILE ]]; then
-        systemctl enable --now step-ca.service
-        if ((service_was_active)); then
-            success "Replaced bmca with $PROJECT_VERSION for $BMCA_ENV and restarted step-ca."
-        else
-            success "Installed bmca $PROJECT_VERSION for $BMCA_ENV and started the existing CA."
-        fi
-    else
-        systemctl disable step-ca.service 2>/dev/null || true
-        success "Installed bmca $PROJECT_VERSION for $BMCA_ENV. Initialize or restore the complete CA before enabling the service."
-    fi
-    install_complete=1
-    trap - EXIT
+    systemctl disable step-ca.service 2>/dev/null || true
+    success "Clean-installed bmca $PROJECT_VERSION for $BMCA_ENV. Run initialize-bmca.sh to create the CA."
 }
 
 main "$@"

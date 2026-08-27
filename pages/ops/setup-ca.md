@@ -68,8 +68,7 @@ Example output:
 ```
 
 The command refuses to overwrite an existing root CA directory or installed
-CA. To start over, uninstall BMCA, remove the preserved `/etc/step-ca` and
-`/var/lib/step-ca` directories, reinstall BMCA, and run initialization again.
+CA. To start over, run the clean installer again and then repeat initialization.
 
 ---
 
