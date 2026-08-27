@@ -1,5 +1,5 @@
 ---
-title: Install MariaDB Certificates
+title: Manual MariaDB Certificate Install
 author_profile: true
 layout: single
 ---
