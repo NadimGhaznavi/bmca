@@ -109,7 +109,8 @@ The script performs the following operations:
    /etc/mysql/server-key.pem   0640
    ```
 
-8. Restarts MariaDB.
+8. Installs `/etc/mysql/mariadb.conf.d/60-bmca-client.cnf` so local MariaDB command-line clients trust `/etc/mysql/cacert.pem`.
+9. Restarts MariaDB.
 
 Temporary archives, extracted certificates, and decrypted staging keys are removed automatically when the script exits.
 
