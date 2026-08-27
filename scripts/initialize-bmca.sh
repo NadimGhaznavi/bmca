@@ -29,7 +29,7 @@ main() {
     require_command sed
     require_file "$password_file"
     check_secret_mode "$password_file"
-    [[ -f $INSTALL_CONF_DIR/environment ]] || die "Run install.sh first."
+    [[ -f $INSTALL_CONF_DIR/environment ]] || die "Run install-ca.sh first."
     [[ $(<"$INSTALL_CONF_DIR/environment") == "$BMCA_ENV" ]] || die "Installed environment mismatch."
     [[ ! -e $STEP_CA_CONFIG_FILE ]] || die "CA is already initialized: $STEP_CA_CONFIG_FILE"
     [[ ! -e $BMCA_ROOT_CA_DIR ]] || die "Root CA directory already exists: $BMCA_ROOT_CA_DIR"
