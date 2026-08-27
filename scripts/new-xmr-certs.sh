@@ -5,6 +5,12 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/common.sh
 source "$SCRIPT_DIR/lib/common.sh"
 
+XMR_CERTS_WORK_DIR=''
+
+cleanup() {
+    [[ -z $XMR_CERTS_WORK_DIR ]] || rm -rf -- "$XMR_CERTS_WORK_DIR"
+}
+
 usage() {
     printf 'Usage: %s [--output-dir DIR] [--provisioner-password-file FILE] [--key-password-file FILE] [--lifetime DURATION]\n' "$(basename "$0")"
 }
@@ -42,7 +48,8 @@ main() {
     output_parent=$(dirname -- "$output_dir")
     [[ -d $output_parent ]] || die "Output parent directory does not exist: $output_parent"
     work_dir=$(mktemp -d /tmp/xmr-certs.XXXXXX)
-    trap 'rm -rf -- "$work_dir"' EXIT
+    XMR_CERTS_WORK_DIR=$work_dir
+    trap cleanup EXIT
     certificate_dir="$work_dir/certificates"
     bundle_dir="$work_dir/bundles"
     mkdir -m 0700 "$certificate_dir" "$bundle_dir"

@@ -5,6 +5,12 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/common.sh
 source "$SCRIPT_DIR/lib/common.sh"
 
+DB_CERT_WORK_DIR=''
+
+cleanup() {
+    [[ -z $DB_CERT_WORK_DIR ]] || rm -rf -- "$DB_CERT_WORK_DIR"
+}
+
 usage() {
     printf 'Usage: %s --env dev|qa|prod --subject DNS_NAME [--key-password-file FILE]\n' "$(basename "$0")"
 }
@@ -50,7 +56,8 @@ main() {
     local work_dir archive_name checksum_name leaf_cert encrypted_key
     local server_cert server_key backup_root backup_dir timestamp file
     work_dir=$(mktemp -d /tmp/install-db-cert.XXXXXX)
-    trap 'rm -rf -- "$work_dir"' EXIT
+    DB_CERT_WORK_DIR=$work_dir
+    trap cleanup EXIT
     archive_name="xmr-certs-$environment.tar.gz"
     checksum_name="$archive_name.sha256"
     leaf_cert="$work_dir/certificates/$subject.crt"
