@@ -21,6 +21,8 @@ Run the script as `root` on the target database server. The server must have:
 - Password-free root SSH access to the certificate source host.
 - `/root/.bmca-leaf`, containing the password used to encrypt the certificate's private key, with mode `0600`.
 
+The database server does not need `step-ca`, the `step` CLI, CA keys, or CA state. It only needs the installed BMCA scripts and settings plus the standard utilities checked by the installer.
+
 If `/root/.bmca-leaf` is missing, retrieve it separately from the production CA:
 
 ```sh
