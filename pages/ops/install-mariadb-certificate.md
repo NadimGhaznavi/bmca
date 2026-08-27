@@ -16,12 +16,20 @@ This page describes how to install an XMR Pool TLS certificate on a MariaDB serv
 
 Run the script as `root` on the target database server. The server must have:
 
-- The BMCA package installed under `/opt/bmca`.
+- The [BMCA certificate-target tools](/pages/ops/install-ca-target) installed under `/opt/bmca` with `install-ca-target.sh`.
 - MariaDB installed with a `mysql` group.
 - Password-free root SSH access to the certificate source host.
 - `/root/.bmca-leaf`, containing the password used to encrypt the certificate's private key, with mode `0600`.
 
 The database server does not need `step-ca`, the `step` CLI, CA keys, or CA state. It only needs the installed BMCA scripts and settings plus the standard utilities checked by the installer.
+
+From a BMCA source checkout, install the target-safe tools with:
+
+```sh
+./scripts/install-ca-target.sh
+```
+
+This copies only the target installer, database certificate installer, shared shell library, and target settings into `/opt/bmca`.
 
 If `/root/.bmca-leaf` is missing, retrieve it separately from the production CA:
 
@@ -30,10 +38,10 @@ scp root@paris:/root/.bmca-leaf /root/.bmca-leaf
 chmod 0600 /root/.bmca-leaf
 ```
 
-The certificate source is configured in `/opt/bmca/conf/settings.cfg`:
+The certificate source and deployment paths are configured in `/opt/bmca/conf/target-settings.cfg`:
 
 ```sh
-XMR_CERT_SOURCE_HOST="$PROD_CA_HOST"
+XMR_CERT_SOURCE_HOST="paris"
 XMR_CERT_SOURCE_DIR="/root/certs"
 ```
 
