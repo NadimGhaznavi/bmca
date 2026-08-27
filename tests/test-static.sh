@@ -28,7 +28,7 @@ source "$ROOT/conf/settings.cfg"
 source "$ROOT/conf/target-settings.cfg"
 [[ -n $XMR_CERT_SOURCE_HOST && $XMR_CERT_SOURCE_DIR == /* ]]
 for path in "$TARGET_LEAF_KEY_PASSWORD_FILE" "$MARIADB_CA_FILE" "$MARIADB_CERT_FILE" \
-    "$MARIADB_KEY_FILE" "$MARIADB_CERT_BACKUP_DIR"; do [[ $path == /* ]]; done
+    "$MARIADB_KEY_FILE" "$MARIADB_CLIENT_CONFIG_FILE" "$MARIADB_CERT_BACKUP_DIR"; do [[ $path == /* ]]; done
 for path in "$SOURCE_DIR" "$INSTALL_DIR" "$STEP_CA_CONFIG_DIR" "$STEP_CA_STATE_DIR" \
     "$DEV_BACKUP_TARGET_DIR" "$PROD_BACKUP_TARGET_DIR"; do [[ $path == /* ]]; done
 for script in "$ROOT"/scripts/*.sh "$ROOT"/scripts/lib/*.sh "$ROOT"/tests/*.sh; do [[ -x $script ]]; done
