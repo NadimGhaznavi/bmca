@@ -158,3 +158,43 @@ Before replacing the deployed files, the script copies any existing certificates
 The success message reports the exact backup directory. Retain that directory until the new certificate has been verified.
 
 ---
+
+# Verification
+
+```sh
+root@sally:~/bmca # mysql -u root
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 32
+Server version: 11.8.6-MariaDB-0+deb13u1 from Debian -- Please help get to 10k stars at https://github.com/MariaDB/Server
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]> status;
+--------------
+mysql from 11.8.6-MariaDB, client 15.2 for debian-linux-gnu (x86_64) using  EditLine wrapper
+
+Connection id:		32
+Current database:	
+Current user:		root@localhost
+SSL:			Cipher in use is TLS_AES_256_GCM_SHA384, cert is OK
+Current pager:		stdout
+Using outfile:		''
+Using delimiter:	;
+Server:			MariaDB
+Server version:		11.8.6-MariaDB-0+deb13u1 from Debian -- Please help get to 10k stars at https://github.com/MariaDB/Server
+Protocol version:	10
+Connection:		Localhost via UNIX socket
+Server characterset:	utf8mb4
+Db     characterset:	utf8mb4
+Client characterset:	utf8mb4
+Conn.  characterset:	utf8mb4
+UNIX socket:		/run/mysqld/mysqld.sock
+Uptime:			1 min 47 sec
+
+Threads: 1  Questions: 63  Slow queries: 0  Opens: 33  Open tables: 26  Queries per second avg: 0.588
+--------------
+
+MariaDB [(none)]> 
+```
