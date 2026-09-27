@@ -18,6 +18,9 @@ remote_theme: "NadimGhaznavi/minimal-mistakes"
 minimal_mistakes_skin: "dark"
 #minimal_mistakes_skin: "sunrise"
 #minimal_mistakes_skin: "air"
+mycount:
+    endpoint: "https://count.osoyalce.com/count"
+    site: "bmca"
 
 # Site Settings
 locale: "en-US"
