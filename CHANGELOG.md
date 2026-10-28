@@ -13,6 +13,8 @@ metadata or whitespace changes are omitted.
 
 ## [Unreleased]
 
+## [Release 1.0.1] - 2026-10-28 05:16 EDT
+
 ## [Release 1.0.0] - 2026-10-04 05:41 EDT
 
 ### Added
