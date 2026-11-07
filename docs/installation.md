@@ -24,6 +24,9 @@ Both roles install the Python identity package plus `install.py`, `install.sh`,
 old configuration files, systemd units, and certificate templates are not copied.
 Python 3.11 or newer and Bash are required; there are no pip dependencies or venv
 at this checkpoint. The installer verifies imports with `/usr/bin/python3`.
+When dependencies are configured in a later phase, final verification uses the
+owned production venv interpreter. The optional path is exercised with real
+offline dependency fixtures; production requirements remain disabled here.
 The Python [application architecture](architecture.md) owns the implementation;
 `scripts/install.py` and the shell scripts are thin launchers.
 
@@ -82,3 +85,6 @@ Application errors remain `ValueError` subclasses and expose a stable message
 than depending on English exception strings.
 
 No migration from `/opt/bmca`, NFS mount change, or archive relocation is performed.
+
+See [Lifecycle verification](verification.md) for both-role coverage, interrupted
+operations, preflight failures, ownership boundaries, and the current limits.

@@ -32,12 +32,13 @@ def literals(path):
 
 
 def snapshot(root):
-    return {path.relative_to(root).as_posix(): (path.stat().st_mode, path.stat().st_mtime_ns,
-                                             path.read_bytes() if path.is_file() else None)
+    return {path.relative_to(root).as_posix(): (path.lstat().st_mode, path.lstat().st_mtime_ns,
+                                             str(path.readlink()) if path.is_symlink()
+                                             else path.read_bytes() if path.is_file() else None)
             for path in root.rglob("*")}
 
 
-class InstallationTests(unittest.TestCase):
+class InstallationFixture(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix="bmca-install-")
         self.addCleanup(self.temporary.cleanup)
@@ -63,6 +64,8 @@ class InstallationTests(unittest.TestCase):
         path.write_text(path.read_text().replace('VERSION: Final[str] = "1.0.1"',
                                                 'VERSION: Final[str] = "1.0.2"'))
 
+
+class InstallationTests(InstallationFixture):
     def test_ca_identity_manifest_and_verified_version(self):
         self.deploy("install", role="ca")
         values = literals(self.destination / "bmca/constants/DBMCA.py")

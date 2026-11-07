@@ -130,6 +130,31 @@ class LocalizationTests(unittest.TestCase):
         self.assertEqual(result, 1)
         self.assertEqual(errors.getvalue(), "测试 测试\n")
 
+    def test_external_failures_return_failure_without_success_output(self):
+        failures = (OSError("fixture filesystem failure"),
+                    subprocess.CalledProcessError(1, ["fixture"], stderr="fixture subprocess failure"),
+                    subprocess.TimeoutExpired(["fixture"], 1))
+        for failure in failures:
+            with self.subTest(failure=failure):
+                output, errors = io.StringIO(), io.StringIO()
+                with patch.object(cli, "BMCA") as application, \
+                        contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
+                    application.return_value.deploy.side_effect = failure
+                    result = cli.main(["install", "--check", "--role", "ca", "--lang", "en"])
+                self.assertEqual(result, 1)
+                self.assertEqual(output.getvalue(), "")
+                self.assertIn("Deployment failed:", errors.getvalue())
+
+    def test_privilege_failure_happens_before_application_construction(self):
+        errors = io.StringIO()
+        with patch.object(cli.os, "geteuid", return_value=1000), \
+                patch.object(cli, "BMCA") as application, contextlib.redirect_stderr(errors):
+            with self.assertRaises(SystemExit) as failure:
+                cli.main(["install", "--role", "ca", "--lang", "en"])
+        self.assertEqual(failure.exception.code, 2)
+        self.assertIn("Run deployment as root", errors.getvalue())
+        application.assert_not_called()
+
     def test_browser_negotiation_remains_ready_for_future_front_end(self):
         self.catalogue("zh-CN", {})
         self.catalogue("uk", {})

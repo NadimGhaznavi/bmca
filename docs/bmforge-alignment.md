@@ -107,3 +107,22 @@ reverted changes are rejected as well.
 See [Releases](releases.md). Acceptance tests run only in disposable repositories
 with local bare remotes. This tooling checkpoint does not complete CA services or
 database implementation, publish a real release, or change project branches.
+
+## Lifecycle/failure-verification checkpoint
+
+Expanded verification covers repeat operations and retention for both roles,
+read-only checks, interrupted copies and retry, atomic replacement cleanup,
+ownership/path validation, optional dependencies in a real offline venv, CLI
+failure reporting, and remote atomic-push rejection. Production dependency
+settings, backup/storage behavior, and service/database scope are unchanged.
+
+Regression tests exposed and corrected four installer defects: claiming the
+retained role record as owned code, accepting a manifest without a valid role,
+verifying dependency-enabled payloads with system Python, and accepting a
+non-runnable owned interpreter during preflight.
+
+The full suite now contains 56 tests across installation, lifecycle failures,
+dependency isolation, localization, and Git release behavior. See
+[Lifecycle verification](verification.md) for the evidence and remaining limits.
+This completes the requested foundation verification checkpoint; CA features,
+database provisioning, HTTP, and XMR integration remain later work.

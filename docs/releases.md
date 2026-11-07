@@ -66,6 +66,9 @@ Tests use disposable repositories and local bare remotes, including actual
 interactive confirmation. They verify metadata and optional package-version
 synchronization, annotated tags, matching branch tips, preserved changelog
 history, cancellation, and rejection of unchanged or invalid releases.
+An update hook that rejects only the tag also verifies that atomic publication
+leaves the remote `main`, `dev`, and tag refs unchanged as a group. The tests
+check the remaining local commits/tag and stopped workflow for recovery.
 
 After publication, verify the tag, released metadata, matching `main`/`dev` tips,
 and clean next feature branch. A failed operation can leave local merges or

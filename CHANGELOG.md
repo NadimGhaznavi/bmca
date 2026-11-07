@@ -15,15 +15,10 @@ metadata or whitespace changes are omitted.
 
 ### Summary
 
-Establish a greenfield BMCA identity and installation foundation using the pinned
-BMForge contracts. Record installation roles, ownership, and verified versions
-while leaving CA services and database provisioning for later phases.
-Organize the working foundation into Python activities, interfaces, and data
-entities while preserving its installation behavior.
-Make CLI text localization-ready with an English catalogue and stable message
-keys; leave translations for a later checkpoint.
-Align release publication with canonical metadata and refuse releases with no
-committed file changes.
+Build the greenfield BMCA foundation with canonical metadata, verified lifecycle
+operations, Python activities/interfaces, and an English-only message catalogue.
+Align Git releases with canonical versioning and expand failure-path coverage for
+ownership, runtime isolation, and atomic publication.
 
 ### Added
 
@@ -44,6 +39,8 @@ committed file changes.
 - Add the unchanged pinned localizer, English message catalogue, stable CLI/error
   keys, explicit/environment locale selection, and Unicode/fallback acceptance
   fixtures using the Blog's `zh-CN` and `uk` identifiers.
+- Add both-role lifecycle, interruption/retry, ownership-boundary, offline venv
+  dependency, CLI failure, and rejected atomic Git-push acceptance coverage.
 
 ### Changed
 
@@ -71,6 +68,10 @@ committed file changes.
 - Refuse release when Git finds an identical committed tree compared with
   `main`, before generating metadata or fetching refs. Cover empty commits,
   reverted changes, and repeated release attempts in disposable Git fixtures.
+- Reject manifests that claim the retained role record or omit a valid role.
+- Verify dependency-enabled payloads with their owned venv interpreter and reject
+  non-runnable or incorrectly isolated owned runtimes during preflight, before
+  copying files or changing installation records.
 
 ## [Release 1.0.1] - 2026-10-28 05:16 EDT
 

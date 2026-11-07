@@ -27,7 +27,7 @@ def relative_path(name: str) -> str:
     path = PurePosixPath(name)
     if not name or path.is_absolute() or '..' in path.parts or path.as_posix() != name or name == '.':
         raise ApplicationError(DText.ERROR_PATH_INVALID, name=name)
-    if name in (DInstallation.MANIFEST, DInstallation.VERSION_MARKER):
+    if name in (DInstallation.MANIFEST, DInstallation.VERSION_MARKER, DInstallation.ROLE_FILE):
         raise ApplicationError(DText.ERROR_PATH_RESERVED, name=name)
     return name
 
@@ -90,7 +90,7 @@ class InstallationFiles:
         if (not isinstance(data, dict) or data.get('project') != DInstallation.PROJECT_NAME
                 or not isinstance(data.get('files'), list)):
             raise ApplicationError(DText.ERROR_OWNERSHIP_PROJECT)
-        if data.get('role') != self.installed_role():
+        if data.get('role') not in DInstallation.ROLES or data.get('role') != self.installed_role():
             raise ApplicationError(DText.ERROR_OWNERSHIP_ROLE)
         if type(data.get('venv_owned', False)) is not bool:
             raise ApplicationError(DText.ERROR_OWNERSHIP_VENV)
@@ -181,6 +181,16 @@ class InstallationFiles:
                     or '/opt/dev/' in configuration.read_text()
                     or '/opt/dev/' in str(binary.resolve())):
                 raise ApplicationError(DText.ERROR_VENV_INVALID, venv=venv)
+            try:
+                self.run([str(binary), '-B', '-c',
+                          'import sys; from pathlib import Path; '
+                          'assert sys.prefix != sys.base_prefix; '
+                          'assert Path(sys.prefix).resolve() == Path(sys.argv[1]).resolve(); '
+                          f'assert sys.version_info >= {DInstallation.MINIMUM_PYTHON!r}',
+                          str(venv)], check=True, env=self.python_environment(),
+                         capture_output=True, text=True, timeout=30)
+            except (OSError, subprocess.SubprocessError) as error:
+                raise ApplicationError(DText.ERROR_VENV_INVALID, venv=venv) from error
         host_python = Path(DInstallation.SYSTEM_PYTHON)
         if (not host_python.is_absolute() or '/opt/dev/' in DInstallation.SYSTEM_PYTHON
                 or host_python.is_relative_to(self.destination)
@@ -257,7 +267,9 @@ class InstallationFiles:
             if source_mode & 0o111 and not path.stat().st_mode & 0o111:
                 raise ApplicationError(DText.ERROR_EXECUTABLE_INVALID, name=name)
         environment = self.python_environment()
-        self.run([DInstallation.SYSTEM_PYTHON, '-B', '-c',
+        python = (self.destination / DInstallation.VENV_DIR / 'bin/python'
+                  if DInstallation.REQUIREMENTS_FILE is not None else Path(DInstallation.SYSTEM_PYTHON))
+        self.run([str(python), '-B', '-c',
                   'import json, sys; from pathlib import Path; '
                   'from bmca.BMCA import BMCA; from bmca.constants.DBMCA import DBMCA; '
                   'from bmca.constants.DText import DText; from bmca.interface.Localizer import Localizer; '

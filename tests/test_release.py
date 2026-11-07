@@ -194,6 +194,31 @@ class ReleaseTests(unittest.TestCase):
         self.feature()
         self.assert_rejected_unchanged("Confirmation requires an interactive terminal", terminal=False)
 
+    def test_remote_tag_rejection_keeps_all_remote_refs_unchanged(self):
+        self.feature()
+        remote_before = self.git("ls-remote", "origin")
+        main_before = self.git("rev-parse", "main")
+        # Reject only the tag: atomic push must also roll back main/dev updates.
+        hook = self.remote / "hooks/update"
+        hook.write_text('#!/bin/sh\ncase "$1" in refs/tags/*) exit 1;; *) exit 0;; esac\n')
+        hook.chmod(0o755)
+        result = self.release()
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        self.assertIn("Stopped during Push release refs atomically", result.stdout)
+        self.assertEqual(self.git("ls-remote", "origin"), remote_before)
+        self.assertNotEqual(self.git("rev-parse", "main"), main_before)
+        self.assertEqual(self.git("cat-file", "-t", "v1.0.2"), "tag")
+        self.assertEqual(self.git("branch", "--show-current"), "dev")
+        self.assertNotIn("refs/heads/feat/maint-1.0.3", self.git("for-each-ref", "--format=%(refname)"))
+
+    def test_feature_missing_dev_changes_is_rejected_before_merging(self):
+        self.feature()
+        self.git("switch", "dev")
+        self.write("dev-change.txt", "New dev work.\n")
+        self.commit("Advance dev beyond feature")
+        self.git("switch", "feat/maint-1.0.2")
+        self.assert_rejected_unchanged("Merge dev into the feature branch")
+
 
 if __name__ == "__main__":
     unittest.main(buffer=True)
