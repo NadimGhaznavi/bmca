@@ -13,6 +13,25 @@ metadata or whitespace changes are omitted.
 
 ## [Unreleased]
 
+### Summary
+
+Prepare phased BMForge alignment with pinned engineering skills, preserved
+application behavior, and user review/commit checkpoints. Correct a test that
+incorrectly required separate backup destinations for inventory labels.
+
+### Added
+
+- Attach the four pinned BMForge core skills, their reference bundles, and the
+  project-local manager and lock file.
+- Add project instructions and a phased alignment plan that preserves existing
+  behavior, records the canonical BMCA name, and requires discussion before
+  behavior changes and a user review/commit checkpoint after each phase.
+
+### Fixed
+
+- Remove the static test's incorrect requirement for different development and
+  production backup paths. Inventory labels do not require backup separation.
+
 ## [Release 1.0.1] - 2026-10-28 05:16 EDT
 
 ## [Release 1.0.0] - 2026-10-04 05:41 EDT
