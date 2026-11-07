@@ -26,8 +26,8 @@ The installed core skills are pinned in `.agents/bmforge/lock.json` at
 | --- | --- | --- |
 | 1. Foundation | Core skills, project instructions, and phased plan. | Pinned references and review/commit checkpoints are documented. |
 | 2. Canonical identity and installation records | Literal metadata, `/opt/prod/bmca`, standard file installer, ownership manifest, retained installation role, verified version marker. | Disposable tests verify both roles, failure handling, configuration/data retention, and independence from the checkout. No legacy/XMR payload is installed. |
-| 3. CA lifecycle | Define and implement the new CA engine integration and actual service lifecycle. | Agree behavior first; verify provisioning, startup/health, failures, and retained state in disposable environments. |
-| 4. Certificate operations | Implement the required generic certificate-management activities, interfaces, and entities. | Verify agreed certificate semantics and operational failure cases. |
+| 3. Python architecture | Organize the working foundation into activities, interfaces, entities, and an application composition root. | Preserve deployment behavior and exercise the Python API and installed CLI without the checkout. |
+| 4. CA lifecycle and certificate operations | Define and implement the new CA engine integration and required generic certificate-management use cases. | Agree behavior first; verify provisioning, startup/health, certificate semantics, failures, and retained state in disposable environments. |
 | 5. Localization | Introduce the pinned localizer, stable message keys, and English catalogue for the application UI/CLI. | Validate keys/placeholders and locale handling without altering machine identifiers. |
 | 6. Release and acceptance | Configure the canonical release template and complete system verification and operator documentation. | Test release flow in a disposable repository and report remaining live-host validation. |
 | Later | HTTP front end, additional certificate management, and a fresh XMR integration if requested. | Agree requirements when each phase begins. |
@@ -54,3 +54,17 @@ release. Legacy `scripts/new-release.sh` is not the release path for the new
 system. The canonical release integration is scheduled for phase 6.
 
 See [Installation](installation.md) for the current payload and commands.
+
+## Phase 3 checkpoint
+
+The working installation use case now follows the Python architecture described
+in [Architecture](architecture.md). `BMCA` composes a deployment activity with a
+filesystem/interpreter interface. The activity returns an immutable plan/result
+entity; CLI parsing and output live at the boundary. The shell wrappers remain
+launchers and deployment behavior is preserved.
+
+The acceptance suite exercises the refactored API, unchanged lifecycle behavior,
+and CLI argument validation. It also runs the installed package and script entry
+points with the source checkout unavailable. CA service/issuance behavior, HTTP,
+database provisioning, and XMR integration remain deferred. This checkpoint is
+ready for user review and commit after its checks pass.

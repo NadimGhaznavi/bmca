@@ -18,6 +18,8 @@ metadata or whitespace changes are omitted.
 Establish a greenfield BMCA identity and installation foundation using the pinned
 BMForge contracts. Record installation roles, ownership, and verified versions
 while leaving CA services and database provisioning for later phases.
+Organize the working foundation into Python activities, interfaces, and data
+entities while preserving its installation behavior.
 
 ### Added
 
@@ -31,6 +33,10 @@ while leaving CA services and database provisioning for later phases.
 - Adapt the pinned installer for `/opt/prod/bmca`, managed-file ownership,
   explicit retained roles, and a version marker written after payload/import
   verification. Add disposable installation and failure-path acceptance checks.
+- Add the BMCA composition root, deployment activity, filesystem/interpreter
+  interface, immutable installation plan, and grouped installation constants.
+- Add a package CLI entry point and acceptance checks for invalid inputs and
+  installed entry points working without the source checkout.
 
 ### Changed
 
@@ -38,6 +44,9 @@ while leaving CA services and database provisioning for later phases.
   and standard lifecycle tools; exclude legacy configuration and XMR integration.
 - Use the greenfield acceptance suite as the current test entry point. Retain
   legacy tests and operational source as reference material.
+- Make the installation script a thin CLI launcher. Keep use-case decisions in
+  the activity, I/O in the interface, and output at the CLI boundary; retain the
+  existing lifecycle commands, file ownership, and version-marker behavior.
 
 ### Fixed
 

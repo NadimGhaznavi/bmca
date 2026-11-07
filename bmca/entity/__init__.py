@@ -1,0 +1,1 @@
+"""BMCA entity responsibilities."""

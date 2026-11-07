@@ -29,6 +29,8 @@ The canonical name is `BMCA`, package `bmca`, and identity file
 - Use activities for orchestration, interfaces for external systems, and
   entities only when meaningful. Use ordinary composition, selected component
   templates, and only dependencies required by the current phase.
+- Use `bmca/BMCA.py` as the composition root and `bmca/cli.py` as the CLI
+  boundary. Keep launcher scripts thin; see `docs/architecture.md`.
 - Declare literal CMDB metadata, planned database references, and only listeners
   actually owned by the new implementation. Declarations do not provision them.
 - Update `CHANGELOG.md` under its single `Unreleased` heading for every completed

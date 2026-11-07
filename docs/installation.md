@@ -24,6 +24,8 @@ Both roles install the Python identity package plus `install.py`, `install.sh`,
 old configuration files, systemd units, and certificate templates are not copied.
 Python 3.10 or newer and Bash are required; there are no pip dependencies or venv
 at this checkpoint. The installer verifies imports with `/usr/bin/python3`.
+The Python [application architecture](architecture.md) owns the implementation;
+`scripts/install.py` and the shell scripts are thin launchers.
 
 ## Commands
 
@@ -32,6 +34,7 @@ checkpoint has only been exercised in disposable directories.
 
 ```sh
 python3 -B scripts/check-cmdb.py --name BMCA bmca/constants/DBMCA.py
+python3 -B -m bmca --help
 scripts/install.sh --role ca --check
 sudo scripts/install.sh --role ca
 # On a certificate target, use --role target instead.
@@ -65,5 +68,10 @@ The version marker is written last, after copied-file, executable, and installed
 import verification. Failure does not advance it, but file replacement is not a
 transactional rollback. Inspect or retry a failed operation from the source
 checkout. Keep development paths and secrets out of the deployed payload.
+
+Python callers can use `BMCA(checkout, destination=...).deploy(action, role=...,
+check=...)`. This returns an `InstallationPlan`; it does not print CLI messages.
+The destination argument supports disposable tests. Actual operations use the
+same activity and interface as the command-line launchers.
 
 No migration from `/opt/bmca`, NFS mount change, or archive relocation is performed.
