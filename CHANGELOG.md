@@ -15,17 +15,29 @@ metadata or whitespace changes are omitted.
 
 ### Summary
 
-Prepare phased BMForge alignment with pinned engineering skills, preserved
-application behavior, and user review/commit checkpoints. Correct a test that
-incorrectly required separate backup destinations for inventory labels.
+Establish a greenfield BMCA identity and installation foundation using the pinned
+BMForge contracts. Record installation roles, ownership, and verified versions
+while leaving CA services and database provisioning for later phases.
 
 ### Added
 
 - Attach the four pinned BMForge core skills, their reference bundles, and the
   project-local manager and lock file.
-- Add project instructions and a phased alignment plan that preserves existing
-  behavior, records the canonical BMCA name, and requires discussion before
-  behavior changes and a user review/commit checkpoint after each phase.
+- Add project instructions and a phased plan for the canonical BMCA application,
+  with a user review/commit checkpoint after each phase.
+- Add literal BMCA version/CMDB metadata, configuration/data paths, and the planned
+  `bmca` MariaDB catalog. Targets receive role-specific metadata without CA
+  resources; no database or listener is provisioned in this phase.
+- Adapt the pinned installer for `/opt/prod/bmca`, managed-file ownership,
+  explicit retained roles, and a version marker written after payload/import
+  verification. Add disposable installation and failure-path acceptance checks.
+
+### Changed
+
+- Treat the new implementation as greenfield. Install only the identity package
+  and standard lifecycle tools; exclude legacy configuration and XMR integration.
+- Use the greenfield acceptance suite as the current test entry point. Retain
+  legacy tests and operational source as reference material.
 
 ### Fixed
 

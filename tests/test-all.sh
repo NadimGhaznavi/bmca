@@ -2,8 +2,10 @@
 set -Eeuo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 
-"$ROOT/tests/test-static.sh"
-"$ROOT/tests/test-cli.sh"
-"$ROOT/tests/test-local-init.sh"
-"$ROOT/tests/test-backup.sh"
+for name in install upgrade uninstall; do
+    bash -n "$ROOT/scripts/$name.sh"
+    "$ROOT/scripts/$name.sh" --help >/dev/null
+done
+python3 -B "$ROOT/scripts/check-cmdb.py" --root "$ROOT" --name BMCA bmca/constants/DBMCA.py
+python3 -B "$ROOT/tests/test_installation.py"
 printf 'All applicable tests passed.\n'

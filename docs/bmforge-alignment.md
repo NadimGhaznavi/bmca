@@ -1,63 +1,56 @@
-# Phased BMForge alignment
+# Phased BMForge build
 
-Refactor BMCA's internal design while preserving its observable behavior. Finish
-one phase at a time, then stop for the user's review and Git commit. HTTP and new
-certificate-management features follow the core alignment.
+Build a clean BMCA implementation from the pinned BMForge specifications.
+Complete one phase at a time, then stop for the user's review and Git commit.
+The canonical name is `BMCA`; the package is `bmca`.
 
-The governing BMForge snapshot is pinned in `.agents/bmforge/lock.json` at
-`29a100c39997349ecfd40e190319aeb5018ffab8`. Installing the core skills does not
-establish application conformance.
+The installed core skills are pinned in `.agents/bmforge/lock.json` at
+`29a100c39997349ecfd40e190319aeb5018ffab8`.
 
-## Compatibility rules
+## Agreed scope
 
-- Canonical name: `BMCA`; package: `bmca`; metadata: `bmca/constants/DBMCA.py`.
-- Preserve existing command options, English output, certificate semantics,
-  configuration values and precedence, storage paths, and installation behavior.
-- Keep Smallstep and the existing CA-host/certificate-target responsibilities.
-- Inventory GUI labels (`dev`, `qa`, `prod`) do not imply separate backup
-  destinations or different backup behavior. Preserve existing storage and mount
-  arrangements. Clients use `/imports/...`; the NFS server uses local
-  `/exports/...` paths. No storage migration is part of this refactor.
-- Existing scripts also use `--env` to select CA hosts and settings. Reconcile
-  that legacy behavior with inventory-only labels through discussion before
-  changing it; this checkpoint leaves it intact.
-- Discuss observable behavior changes before implementation. Record conflicts
-  with BMForge as explicit gaps rather than silently changing the application.
+- This is greenfield. Use the canonical templates directly and keep the design
+  simple. Legacy scripts/configuration are reference material, not dependencies
+  or payload of the new implementation.
+- Do not port XMR pool workflows, host lists, certificate bundles, or deployment
+  settings. Reintroduce that integration from scratch in a later phase.
+- Include the planned MariaDB catalog `bmca` in BMCA's CMDB declaration. Database
+  provisioning, schemas, credentials, and runtime database access are later work.
+- Inventory GUI labels (`dev`, `qa`, `prod`) do not imply distinct backup storage
+  or behavior. The existing NFS/autofs arrangement remains unchanged.
+- Existing repository history and published releases remain intact.
 
 ## Checkpoints
 
 | Phase | Scope | Acceptance |
 | --- | --- | --- |
-| 1. Foundation | Pin core skills, add project instructions and this plan, record changes, correct the invalid backup-separation test. | Static/CLI checks pass; integration skips are reported; runtime behavior is unchanged. |
-| 2. Identity and configuration | Add domain-grouped constants and discoverable CMDB metadata; centralize existing settings. | Metadata checks pass and existing values, override behavior, and paths are preserved. |
-| 3. Installation structure | Adapt the pinned installer and lifecycle entry points to the existing installation roles. | Disposable compatibility tests preserve existing payloads, paths, configuration, and lifecycle semantics. Discuss any new upgrade behavior or data-retention policy before implementing it. |
-| 4. Application structure | Move shell orchestration into Python activities and interfaces, retaining existing command entry points. | Existing commands, certificate results, backup/restore behavior, and failure behavior pass regression checks. |
-| 5. Localization structure | Introduce the pinned localizer, stable message keys, and English catalogue. | Existing English output and machine identifiers remain unchanged. Additional languages require separate requirements. |
-| 6. Release and acceptance | Align metadata/release internals and complete cross-phase verification. | Exercise the existing release flow in a disposable repository; verify compatibility and document unresolved contract gaps. |
-| Later | HTTP front end and additional certificate-management features. | Agree their behavior and acceptance criteria when those phases begin. |
+| 1. Foundation | Core skills, project instructions, and phased plan. | Pinned references and review/commit checkpoints are documented. |
+| 2. Canonical identity and installation records | Literal metadata, `/opt/prod/bmca`, standard file installer, ownership manifest, retained installation role, verified version marker. | Disposable tests verify both roles, failure handling, configuration/data retention, and independence from the checkout. No legacy/XMR payload is installed. |
+| 3. CA lifecycle | Define and implement the new CA engine integration and actual service lifecycle. | Agree behavior first; verify provisioning, startup/health, failures, and retained state in disposable environments. |
+| 4. Certificate operations | Implement the required generic certificate-management activities, interfaces, and entities. | Verify agreed certificate semantics and operational failure cases. |
+| 5. Localization | Introduce the pinned localizer, stable message keys, and English catalogue for the application UI/CLI. | Validate keys/placeholders and locale handling without altering machine identifiers. |
+| 6. Release and acceptance | Configure the canonical release template and complete system verification and operator documentation. | Test release flow in a disposable repository and report remaining live-host validation. |
+| Later | HTTP front end, additional certificate management, and a fresh XMR integration if requested. | Agree requirements when each phase begins. |
 
-Identity precedes installer restructuring so the installer can consume the
-canonical metadata. The phases are review boundaries, not permission to change
-operational behavior. Split a large phase into smaller checkpoints if needed.
+## Phase 2 checkpoint
 
-## Phase 1 checkpoint
+The new foundation installs only the `bmca` identity package and standard
+installation/checking tools. The CA role records configuration/data paths and
+the planned `bmca` database. The target role records no CA-owned paths, database,
+or listeners. Neither role installs or starts a CA, provisions MariaDB, or
+installs old certificate scripts. Listener declarations are empty until the new
+implementation owns a service.
 
-Ready for review and commit:
+The installer is adapted from the pinned BMForge `0.1.3` template. It verifies
+copied files, executable permissions, and a real import from the installed
+package before advancing `.deployment-version`. Upgrade retains the recorded
+role; uninstall removes managed code while retaining configuration/data and an
+ownership tombstone. Installation is a file operation, not a transactional
+rollback; a failed upgrade can leave replaced files while the successful-version
+marker remains unchanged.
 
-- Core skills, manager, and lock file are attached and uncommitted.
-- Project instructions and this phased plan record the behavior-preservation
-  rule and user-owned commit checkpoints.
-- Both existing backup defaults remain `/imports/bmca`. The static test no longer
-  incorrectly requires them to differ. No backup paths, mounts, or archives were
-  changed, and the existing test runner is retained.
-- `bash tests/test-all.sh`: static and CLI checks pass; initialization and
-  encrypted-backup integration fixtures skip because this workspace is
-  unprivileged. These skips do not establish live CA readiness.
-- BMForge's offline check reports all installed pins current against the local
-  source snapshot. The changelog records the skill attachment and foundation.
+The current package version remains `1.0.1`; this phase does not publish a
+release. Legacy `scripts/new-release.sh` is not the release path for the new
+system. The canonical release integration is scheduled for phase 6.
 
-Known BMForge gaps remain: no standard upgrade command, installation ownership
-manifest, or verified installed-version marker. Current installation deletes CA
-state and uninstall removes the local root CA. Changing those semantics, or
-moving `/opt/bmca` to `/opt/prod/bmca`, requires discussion before implementation.
-The next phase is identity and configuration.
+See [Installation](installation.md) for the current payload and commands.
