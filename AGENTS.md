@@ -31,6 +31,11 @@ The canonical name is `BMCA`, package `bmca`, and identity file
   templates, and only dependencies required by the current phase.
 - Use `bmca/BMCA.py` as the composition root and `bmca/cli.py` as the CLI
   boundary. Keep launcher scripts thin; see `docs/architecture.md`.
+- Keep visible CLI text in the English catalogue with stable `DText` keys.
+  Application failures carry keys/parameters and are rendered at the boundary.
+  Use the pinned localizer unchanged; see `docs/localization.md`.
+- Ship English only until translations are requested. Future locale identifiers
+  follow the Blog: Simplified Chinese `zh-CN`, Ukrainian `uk`.
 - Declare literal CMDB metadata, planned database references, and only listeners
   actually owned by the new implementation. Declarations do not provision them.
 - Update `CHANGELOG.md` under its single `Unreleased` heading for every completed

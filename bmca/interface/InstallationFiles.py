@@ -13,6 +13,8 @@ import subprocess
 import tempfile
 
 from bmca.constants.DInstallation import DInstallation
+from bmca.constants.DText import DText
+from bmca.entity.ApplicationError import ApplicationError
 from bmca.entity.InstallationPlan import InstallationPlan
 
 
@@ -21,19 +23,19 @@ BMFORGE_COMPONENT = {"id": "bmforge.installation", "spec_version": "0.1.3"}
 
 def relative_path(name: str) -> str:
     if not isinstance(name, str):
-        raise ValueError("Managed paths must be strings")
+        raise ApplicationError(DText.ERROR_PATH_TYPE)
     path = PurePosixPath(name)
     if not name or path.is_absolute() or '..' in path.parts or path.as_posix() != name or name == '.':
-        raise ValueError(f"Invalid managed path: {name}")
+        raise ApplicationError(DText.ERROR_PATH_INVALID, name=name)
     if name in (DInstallation.MANIFEST, DInstallation.VERSION_MARKER):
-        raise ValueError(f"Reserved bookkeeping path: {name}")
+        raise ApplicationError(DText.ERROR_PATH_RESERVED, name=name)
     return name
 
 
 def reject_symlinks(path: Path) -> None:
     for candidate in (path, *path.parents):
         if candidate.is_symlink():
-            raise ValueError(f"Refusing a symbolic link in deployment path: {candidate}")
+            raise ApplicationError(DText.ERROR_PATH_SYMLINK, candidate=candidate)
 
 
 class InstallationFiles:
@@ -53,7 +55,7 @@ class InstallationFiles:
         reject_symlinks(self.destination)
         if (self.checkout.is_relative_to(self.destination)
                 or self.destination.is_relative_to(self.checkout)):
-            raise ValueError("Run deployment from a separate checkout outside the installation")
+            raise ApplicationError(DText.ERROR_CHECKOUT_OVERLAP)
 
     def installed_role(self) -> str | None:
         path = self.destination / DInstallation.ROLE_FILE
@@ -62,7 +64,7 @@ class InstallationFiles:
             return None
         record = json.loads(path.read_text())
         if not isinstance(record, dict) or record.get('role') not in DInstallation.ROLES:
-            raise ValueError('Installed role must be ca or target')
+            raise ApplicationError(DText.ERROR_STORED_ROLE_INVALID)
         return record['role']
 
     def constants_content(self, role: str) -> bytes:
@@ -82,25 +84,25 @@ class InstallationFiles:
         reject_symlinks(manifest)
         if not manifest.exists():
             if self.destination.exists():
-                raise ValueError("Installation directory exists without an ownership manifest; inspect it before proceeding")
+                raise ApplicationError(DText.ERROR_OWNERSHIP_MISSING)
             return None
         data = json.loads(manifest.read_text())
         if (not isinstance(data, dict) or data.get('project') != DInstallation.PROJECT_NAME
                 or not isinstance(data.get('files'), list)):
-            raise ValueError("Installation ownership manifest does not match this project")
+            raise ApplicationError(DText.ERROR_OWNERSHIP_PROJECT)
         if data.get('role') != self.installed_role():
-            raise ValueError('Installed role and ownership manifest disagree')
+            raise ApplicationError(DText.ERROR_OWNERSHIP_ROLE)
         if type(data.get('venv_owned', False)) is not bool:
-            raise ValueError("Installation manifest has invalid virtual environment ownership")
+            raise ApplicationError(DText.ERROR_OWNERSHIP_VENV)
         names = [relative_path(name) for name in data['files']]
         if (len(names) != len(set(names))
                 or self.version_file not in names and not (not names and data.get('removed') is True)):
-            raise ValueError("Installation ownership manifest has invalid files")
+            raise ApplicationError(DText.ERROR_OWNERSHIP_FILES)
         for name in [*names, DInstallation.VERSION_MARKER]:
             path = self.destination / name
             reject_symlinks(path)
             if path.exists() and not path.is_file():
-                raise ValueError(f"Managed file is no longer a regular file: {path}")
+                raise ApplicationError(DText.ERROR_MANAGED_FILE_INVALID, path=path)
         return names
 
     def source_files(self) -> list[str]:
@@ -111,7 +113,7 @@ class InstallationFiles:
             folder = self.checkout / relative_path(name)
             reject_symlinks(folder)
             if not folder.is_dir():
-                raise ValueError(f"Missing source directory: {name}")
+                raise ApplicationError(DText.ERROR_SOURCE_DIRECTORY_MISSING, name=name)
             for path in folder.rglob('*'):
                 if '__pycache__' in path.parts or DInstallation.VENV_DIR in path.parts or path.suffix in ('.pyc', '.pyo'):
                     continue
@@ -119,16 +121,16 @@ class InstallationFiles:
                 if path.is_file():
                     names.add(relative_path(path.relative_to(self.checkout).as_posix()))
         if self.version_file not in names:
-            raise ValueError("Deployment must include readable CMDB constants")
+            raise ApplicationError(DText.ERROR_METADATA_REQUIRED)
         for name in names:
             source = self.checkout / name
             reject_symlinks(source)
             if not source.is_file():
-                raise ValueError(f"Missing source file: {name}")
+                raise ApplicationError(DText.ERROR_SOURCE_FILE_MISSING, name=name)
             target = self.destination / name
             reject_symlinks(target)
             if target.exists() and not target.is_file():
-                raise ValueError(f"Managed file target is not a regular file: {target}")
+                raise ApplicationError(DText.ERROR_TARGET_FILE_INVALID, target=target)
         return sorted(names)
 
     def venv_owned(self) -> bool:
@@ -148,21 +150,29 @@ class InstallationFiles:
         venv = self.destination / DInstallation.VENV_DIR
         reject_symlinks(venv)
         if venv.exists() and not venv.is_dir():
-            raise ValueError(f'Virtual environment path is not a directory: {venv}')
+            raise ApplicationError(DText.ERROR_VENV_PATH, venv=venv)
         if action != DInstallation.UNINSTALL and not Path(DInstallation.SYSTEM_PYTHON).is_file():
-            raise ValueError(f'Missing host Python interpreter: {DInstallation.SYSTEM_PYTHON}')
+            raise ApplicationError(DText.ERROR_PYTHON_MISSING, system_python=DInstallation.SYSTEM_PYTHON)
+        if action != DInstallation.UNINSTALL:
+            minimum = DInstallation.MINIMUM_PYTHON
+            result = self.run([DInstallation.SYSTEM_PYTHON, '-B', '-c',
+                               f'import sys; sys.exit(0 if sys.version_info >= {minimum!r} else 1)'],
+                              env=self.python_environment(), capture_output=True, timeout=30)
+            if result.returncode:
+                raise ApplicationError(DText.ERROR_PYTHON_VERSION,
+                                       version='.'.join(str(value) for value in minimum))
         if action == DInstallation.UNINSTALL or DInstallation.REQUIREMENTS_FILE is None:
             return
         requirements = self.checkout / relative_path(DInstallation.REQUIREMENTS_FILE)
         if not requirements.is_file():
-            raise ValueError(f'Missing Python dependency manifest: {DInstallation.REQUIREMENTS_FILE}')
+            raise ApplicationError(DText.ERROR_REQUIREMENTS_MISSING, requirements_file=DInstallation.REQUIREMENTS_FILE)
         for entry in requirements.read_text().splitlines():
             entry = entry.strip()
             if (entry.startswith(('-e ', '--editable')) or '/opt/dev/' in entry):
-                raise ValueError('Production Python dependencies must not use editable or /opt/dev installs')
+                raise ApplicationError(DText.ERROR_REQUIREMENTS_DEVELOPMENT)
         if venv.exists():
             if not self.venv_owned():
-                raise ValueError(f'Refusing an unowned virtual environment: {venv}')
+                raise ApplicationError(DText.ERROR_VENV_UNOWNED, venv=venv)
             configuration = venv / 'pyvenv.cfg'
             binary = venv / 'bin/python'
             reject_symlinks(configuration)
@@ -170,7 +180,7 @@ class InstallationFiles:
             if (not configuration.is_file() or not binary.is_file()
                     or '/opt/dev/' in configuration.read_text()
                     or '/opt/dev/' in str(binary.resolve())):
-                raise ValueError(f'Production virtual environment is incomplete or references /opt/dev: {venv}')
+                raise ApplicationError(DText.ERROR_VENV_INVALID, venv=venv)
         host_python = Path(DInstallation.SYSTEM_PYTHON)
         if (not host_python.is_absolute() or '/opt/dev/' in DInstallation.SYSTEM_PYTHON
                 or host_python.is_relative_to(self.destination)
@@ -179,9 +189,9 @@ class InstallationFiles:
                 or host_python.resolve().is_relative_to(self.destination)
                 or '/opt/dev/' in str(host_python.resolve())
                 or (host_python.parent.parent / 'pyvenv.cfg').exists()):
-            raise ValueError('SYSTEM_PYTHON must be a host interpreter outside development and deployed environments')
+            raise ApplicationError(DText.ERROR_PYTHON_LOCATION)
         if shutil.which(DInstallation.SYSTEM_PYTHON) is None:
-            raise ValueError(f'Missing host Python interpreter: {DInstallation.SYSTEM_PYTHON}')
+            raise ApplicationError(DText.ERROR_PYTHON_MISSING, system_python=DInstallation.SYSTEM_PYTHON)
         self.run([DInstallation.SYSTEM_PYTHON, '-B', '-c', 'import venv, ensurepip'],
                  check=True, env=self.python_environment(), capture_output=True,
                  text=True, timeout=30)
@@ -242,13 +252,18 @@ class InstallationFiles:
             expected = (self.constants_content(role) if name == self.version_file
                         else (self.checkout / name).read_bytes())
             if path.read_bytes() != expected:
-                raise ValueError(f'Installed payload verification failed: {name}')
+                raise ApplicationError(DText.ERROR_PAYLOAD_INVALID, name=name)
             source_mode = (self.checkout / name).stat().st_mode
             if source_mode & 0o111 and not path.stat().st_mode & 0o111:
-                raise ValueError(f'Installed executable is not executable: {name}')
+                raise ApplicationError(DText.ERROR_EXECUTABLE_INVALID, name=name)
         environment = self.python_environment()
         self.run([DInstallation.SYSTEM_PYTHON, '-B', '-c',
-                  'import sys; from bmca.BMCA import BMCA; from bmca.constants.DBMCA import DBMCA; '
+                  'import json, sys; from pathlib import Path; '
+                  'from bmca.BMCA import BMCA; from bmca.constants.DBMCA import DBMCA; '
+                  'from bmca.constants.DText import DText; from bmca.interface.Localizer import Localizer; '
+                  'directory = Path("bmca/locales"); Localizer(directory); '
+                  'assert set(json.loads((directory / "en.json").read_text(encoding="utf-8"))) '
+                  '== {key.value for key in DText}; '
                   'assert DBMCA.VERSION == sys.argv[1]',
                   self.metadata['VERSION']], cwd=self.destination,
                  env=environment, check=True, timeout=30, capture_output=True, text=True)
@@ -257,7 +272,7 @@ class InstallationFiles:
         if previous is not None:
             for name in set(current) - set(previous):
                 if (self.destination / name).exists():
-                    raise ValueError(f"New managed file would overwrite an unowned file: {name}")
+                    raise ApplicationError(DText.ERROR_UNOWNED_COLLISION, name=name)
 
     def begin_installation(self, plan: InstallationPlan) -> None:
         self.destination.mkdir(parents=True, exist_ok=True)

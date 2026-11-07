@@ -68,3 +68,26 @@ and CLI argument validation. It also runs the installed package and script entry
 points with the source checkout unavailable. CA service/issuance behavior, HTTP,
 database provisioning, and XMR integration remain deferred. This checkpoint is
 ready for user review and commit after its checks pass.
+
+## Localization checkpoint
+
+Implemented ahead of CA features at the user's request. English remains the only
+shipped language until the user is happy with the application. Stable `DText`
+keys, the unchanged pinned localizer, and an English catalogue now cover CLI
+help, argument errors, application validation, and deployment status. `--lang`
+and standard locale environment preferences are supported without global locale
+mutation.
+
+Future language identifiers follow the Blog: Simplified Chinese `zh-CN` and
+Ukrainian `uk`. Temporary fixtures verify Unicode, placeholder reordering,
+fallback, and locale isolation; no production translations are included.
+
+The Python requirement is now 3.11 or newer for the pinned `StrEnum` template.
+Deployment verifies catalogue/key integrity before updating its successful
+version marker. The Python CLI remains behind the thin canonical lifecycle
+launchers; third-party dependencies and production venv activation stay with
+their corresponding later feature phase.
+
+`bash tests/test-all.sh`: 13 installation checks and 9 localization checks pass.
+The read-only installation check also passes. This checkpoint is ready for user
+review and commit. See [CLI localization](localization.md) for conventions.

@@ -1,6 +1,8 @@
 """Coordinate installation, upgrade, and removal through an injected interface."""
 
 from bmca.constants.DInstallation import DInstallation
+from bmca.constants.DText import DText
+from bmca.entity.ApplicationError import ApplicationError
 from bmca.entity.InstallationPlan import InstallationPlan
 from bmca.interface.InstallationFiles import InstallationFiles
 
@@ -11,20 +13,20 @@ class DeployApplication:
 
     def plan(self, action: str, role: str | None = None) -> InstallationPlan:
         if action not in DInstallation.ACTIONS:
-            raise ValueError(f"Unknown deployment action: {action}")
+            raise ApplicationError(DText.ERROR_UNKNOWN_ACTION, action=action)
         if not DInstallation.DEPLOYMENT_READY:
-            raise ValueError("Deployment is not configured: implement provisioning, lifecycle, and health checks before enabling it")
+            raise ApplicationError(DText.ERROR_DEPLOYMENT_NOT_READY)
         previous = self.files.installed_files()
         stored_role = self.files.installed_role()
         if stored_role and role and stored_role != role:
-            raise ValueError("Cannot change the installed role")
+            raise ApplicationError(DText.ERROR_ROLE_CHANGE)
         selected_role = stored_role or role
         if selected_role is not None and selected_role not in DInstallation.ROLES:
-            raise ValueError("Installation role must be ca or target")
+            raise ApplicationError(DText.ERROR_ROLE_INVALID)
         if action != DInstallation.UNINSTALL and selected_role is None:
-            raise ValueError("First installation requires --role ca or --role target")
+            raise ApplicationError(DText.ERROR_ROLE_REQUIRED)
         if action == DInstallation.UPGRADE and not previous:
-            raise ValueError("No installation found; run install.sh first")
+            raise ApplicationError(DText.ERROR_INSTALLATION_REQUIRED)
         current = [] if action == DInstallation.UNINSTALL else self.files.source_files()
         self.files.preflight_payload(previous, current)
         self.files.preflight_python(action)

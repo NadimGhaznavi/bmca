@@ -13,6 +13,9 @@ integration and certificate operations will be implemented as later use cases.
 | `bmca/entity/InstallationPlan.py` | Hold an immutable plan and result context: action, role, file lists, destination, and version. No I/O. |
 | `bmca/constants/DInstallation.py` | Group payload settings, record paths, actions, and roles. |
 | `bmca/constants/DBMCA.py` | Keep the canonical literal application and CMDB metadata. |
+| `bmca/interface/Localizer.py` | Load and validate the pinned UTF-8 message catalogues and perform per-call lookup/fallback. |
+| `bmca/entity/ApplicationError.py` | Carry a stable error key and values without selecting a language or doing I/O. |
+| `bmca/constants/DText.py` | Define stable message identifiers; English text belongs in the catalogue. |
 
 ```mermaid
 flowchart LR
@@ -29,6 +32,11 @@ use `BMCA.deploy(...)` and receive an `InstallationPlan` without console output.
 Activities use ordinary constructor injection, with no framework or base-class
 hierarchy. The interface retains the pinned installer mechanics and component
 provenance marker.
+
+The CLI resolves locale preferences and renders catalogue-backed help, argument
+errors, and application results. Activities/interfaces raise keyed
+`ApplicationError` failures, retaining `ValueError` compatibility while leaving
+language choice at the boundary. See [CLI localization](localization.md).
 
 Install/upgrade/uninstall semantics, role retention, payload selection, and
 successful-version bookkeeping remain the same. Verification now also imports

@@ -20,6 +20,8 @@ BMForge contracts. Record installation roles, ownership, and verified versions
 while leaving CA services and database provisioning for later phases.
 Organize the working foundation into Python activities, interfaces, and data
 entities while preserving its installation behavior.
+Make CLI text localization-ready with an English catalogue and stable message
+keys; leave translations for a later checkpoint.
 
 ### Added
 
@@ -37,6 +39,9 @@ entities while preserving its installation behavior.
   interface, immutable installation plan, and grouped installation constants.
 - Add a package CLI entry point and acceptance checks for invalid inputs and
   installed entry points working without the source checkout.
+- Add the unchanged pinned localizer, English message catalogue, stable CLI/error
+  keys, explicit/environment locale selection, and Unicode/fallback acceptance
+  fixtures using the Blog's `zh-CN` and `uk` identifiers.
 
 ### Changed
 
@@ -47,6 +52,12 @@ entities while preserving its installation behavior.
 - Make the installation script a thin CLI launcher. Keep use-case decisions in
   the activity, I/O in the interface, and output at the CLI boundary; retain the
   existing lifecycle commands, file ownership, and version-marker behavior.
+- Render help, argument errors, application validation, and deployment status
+  through the catalogue without global locale state. Preserve machine values
+  and raw external diagnostic detail; ship English only for now.
+- Require Python 3.11 for the pinned `StrEnum` message keys and check the host
+  version before install/upgrade writes. Verify installed catalogue integrity
+  before advancing the successful-version marker.
 
 ### Fixed
 

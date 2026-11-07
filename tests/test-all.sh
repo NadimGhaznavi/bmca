@@ -8,4 +8,5 @@ for name in install upgrade uninstall; do
 done
 python3 -B "$ROOT/scripts/check-cmdb.py" --root "$ROOT" --name BMCA bmca/constants/DBMCA.py
 python3 -B "$ROOT/tests/test_installation.py"
+python3 -B "$ROOT/tests/test_localization.py"
 printf 'All applicable tests passed.\n'

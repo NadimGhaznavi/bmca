@@ -15,6 +15,8 @@ sys.path.insert(0, str(PROJECT))
 
 from bmca.BMCA import BMCA
 from bmca.constants.DInstallation import DInstallation
+from bmca.constants.DText import DText
+from bmca.entity.ApplicationError import ApplicationError
 from bmca.entity.InstallationPlan import InstallationPlan
 from bmca.interface.InstallationFiles import InstallationFiles
 
@@ -97,8 +99,9 @@ class InstallationTests(unittest.TestCase):
 
     def test_install_check_has_no_writes_and_requires_explicit_role(self):
         before = snapshot(self.workspace)
-        with self.assertRaisesRegex(ValueError, "requires --role"):
+        with self.assertRaises(ApplicationError) as failure:
             self.deploy("install", check=True)
+        self.assertEqual(failure.exception.key, DText.ERROR_ROLE_REQUIRED)
         plan = self.deploy("install", role="ca", check=True)
         self.assertIsInstance(plan, InstallationPlan)
         self.assertEqual(plan.role, "ca")
@@ -125,8 +128,9 @@ class InstallationTests(unittest.TestCase):
     def test_role_change_is_rejected_before_mutation(self):
         self.deploy("install", role="target")
         before = snapshot(self.workspace)
-        with self.assertRaisesRegex(ValueError, "Cannot change"):
+        with self.assertRaises(ApplicationError) as failure:
             self.deploy("install", role="ca")
+        self.assertEqual(failure.exception.key, DText.ERROR_ROLE_CHANGE)
         self.assertEqual(snapshot(self.workspace), before)
 
     def test_failed_deployed_import_does_not_advance_version(self):
@@ -144,6 +148,17 @@ class InstallationTests(unittest.TestCase):
         self.assertTrue((self.destination / DInstallation.MANIFEST).is_file())
         self.assertFalse((self.destination / DInstallation.VERSION_MARKER).exists())
         self.deploy("uninstall")
+
+    def test_invalid_installed_catalogue_does_not_advance_version(self):
+        self.deploy("install", role="ca")
+        self.update_source_version()
+        catalogue = self.source / "bmca/locales/en.json"
+        values = json.loads(catalogue.read_text(encoding="utf-8"))
+        values.pop(DText.DEPLOYMENT_COMPLETED)
+        catalogue.write_text(json.dumps(values), encoding="utf-8")
+        with self.assertRaises(subprocess.CalledProcessError):
+            self.deploy("upgrade")
+        self.assertEqual((self.destination / DInstallation.VERSION_MARKER).read_text(), "1.0.1\n")
 
     def test_uninstall_retains_configuration_and_data_and_is_repeatable(self):
         self.deploy("install", role="ca")
@@ -187,21 +202,25 @@ class InstallationTests(unittest.TestCase):
 
     def test_application_rejects_invalid_action_without_writes(self):
         before = snapshot(self.workspace)
-        with self.assertRaisesRegex(ValueError, "Unknown deployment action"):
+        with self.assertRaises(ApplicationError) as failure:
             self.deploy("unknown", role="ca", check=True)
+        self.assertEqual(failure.exception.key, DText.ERROR_UNKNOWN_ACTION)
+        self.assertEqual(failure.exception.parameters, {"action": "unknown"})
         self.assertEqual(snapshot(self.workspace), before)
 
     def test_unowned_and_symlinked_destinations_are_rejected(self):
         self.destination.mkdir()
         (self.destination / "unowned.txt").write_text("do not claim this\n")
-        with self.assertRaisesRegex(ValueError, "without an ownership manifest"):
+        with self.assertRaises(ApplicationError) as failure:
             self.deploy("install", role="ca", check=True)
+        self.assertEqual(failure.exception.key, DText.ERROR_OWNERSHIP_MISSING)
         other = self.workspace / "other"
         other.mkdir()
         linked = self.workspace / "linked"
         linked.symlink_to(other, target_is_directory=True)
-        with self.assertRaisesRegex(ValueError, "symbolic link"):
+        with self.assertRaises(ApplicationError) as failure:
             BMCA(self.source, destination=linked).deploy("install", role="ca")
+        self.assertEqual(failure.exception.key, DText.ERROR_PATH_SYMLINK)
 
 
 if __name__ == "__main__":

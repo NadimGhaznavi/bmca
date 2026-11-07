@@ -22,7 +22,7 @@ Select the role explicitly on first installation:
 Both roles install the Python identity package plus `install.py`, `install.sh`,
 `upgrade.sh`, `uninstall.sh`, and `check-cmdb.py`. The existing shell CA/XMR tools,
 old configuration files, systemd units, and certificate templates are not copied.
-Python 3.10 or newer and Bash are required; there are no pip dependencies or venv
+Python 3.11 or newer and Bash are required; there are no pip dependencies or venv
 at this checkpoint. The installer verifies imports with `/usr/bin/python3`.
 The Python [application architecture](architecture.md) owns the implementation;
 `scripts/install.py` and the shell scripts are thin launchers.
@@ -35,6 +35,7 @@ checkpoint has only been exercised in disposable directories.
 ```sh
 python3 -B scripts/check-cmdb.py --name BMCA bmca/constants/DBMCA.py
 python3 -B -m bmca --help
+python3 -B -m bmca --help --lang en
 scripts/install.sh --role ca --check
 sudo scripts/install.sh --role ca
 # On a certificate target, use --role target instead.
@@ -65,7 +66,7 @@ and reinstall without claiming unrelated files. Unexpected unowned installations
 and symlinked deployment paths are refused.
 
 The version marker is written last, after copied-file, executable, and installed
-import verification. Failure does not advance it, but file replacement is not a
+import/catalogue verification. Failure does not advance it, but file replacement is not a
 transactional rollback. Inspect or retry a failed operation from the source
 checkout. Keep development paths and secrets out of the deployed payload.
 
@@ -73,5 +74,11 @@ Python callers can use `BMCA(checkout, destination=...).deploy(action, role=...,
 check=...)`. This returns an `InstallationPlan`; it does not print CLI messages.
 The destination argument supports disposable tests. Actual operations use the
 same activity and interface as the command-line launchers.
+
+English is the only shipped language. See [CLI localization](localization.md) for
+`--lang`, environment selection, and future `zh-CN`/`uk` catalogue conventions.
+Application errors remain `ValueError` subclasses and expose a stable message
+`key` plus substitution `parameters`; render those through the localizer rather
+than depending on English exception strings.
 
 No migration from `/opt/bmca`, NFS mount change, or archive relocation is performed.

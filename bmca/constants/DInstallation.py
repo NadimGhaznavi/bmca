@@ -14,6 +14,7 @@ class DInstallation:
     REQUIREMENTS_FILE: Final[str | None] = None
     VENV_DIR: Final[str] = '.venv'
     SYSTEM_PYTHON: Final[str] = '/usr/bin/python3'
+    MINIMUM_PYTHON: Final[tuple[int, int]] = (3, 11)
     RUNTIME_IMPORTS: Final[tuple[str, ...]] = (
         'bmca', 'bmca.BMCA', 'bmca.activity.DeployApplication',
         'bmca.interface.InstallationFiles', 'bmca.entity.InstallationPlan',
