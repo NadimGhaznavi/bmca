@@ -22,6 +22,8 @@ Organize the working foundation into Python activities, interfaces, and data
 entities while preserving its installation behavior.
 Make CLI text localization-ready with an English catalogue and stable message
 keys; leave translations for a later checkpoint.
+Align release publication with canonical metadata and refuse releases with no
+committed file changes.
 
 ### Added
 
@@ -58,11 +60,17 @@ keys; leave translations for a later checkpoint.
 - Require Python 3.11 for the pinned `StrEnum` message keys and check the host
   version before install/upgrade writes. Verify installed catalogue integrity
   before advancing the successful-version marker.
+- Replace the legacy release flow with the pinned BMForge template configured
+  for BMCA, including canonical version/codename updates, optional package-version
+  synchronization, changelog promotion, and atomic Git publication.
 
 ### Fixed
 
 - Remove the static test's incorrect requirement for different development and
   production backup paths. Inventory labels do not require backup separation.
+- Refuse release when Git finds an identical committed tree compared with
+  `main`, before generating metadata or fetching refs. Cover empty commits,
+  reverted changes, and repeated release attempts in disposable Git fixtures.
 
 ## [Release 1.0.1] - 2026-10-28 05:16 EDT
 

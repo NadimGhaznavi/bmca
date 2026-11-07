@@ -47,3 +47,8 @@ The canonical name is `BMCA`, package `bmca`, and identity file
   restarting host services, creating databases, or deploying on real hosts.
 - Preserve published Git/release history. Do not reinitialize the repository or
   run branch setup; the user already manages branches and commits.
+- Use `scripts/new-release.sh` and `docs/releases.md` for releases. Canonical
+  version/codename fields live in `DBMCA.py`. Refuse release when Git finds no
+  committed file difference from `main`, before generating release metadata.
+- Run release acceptance tests only in disposable repositories/local remotes.
+  Preparing the tooling does not authorize publication from this repository.

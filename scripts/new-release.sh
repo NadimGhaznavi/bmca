@@ -1,281 +1,384 @@
 #!/usr/bin/env bash
-# Create and publish a Bear & Moose CA release.
-#
-# Flow: feature -> dev -> release/vX.Y.Z -> main, then main -> dev.
-# conf/settings.cfg records the source-tree version and must match the annotated
-# vX.Y.Z release tag. Each release also promotes the CHANGELOG.md Unreleased
-# section to a dated release section. This script does not package or copy CA
-# state, private keys, or other secrets.
+# Create and publish a release: feature -> development -> main.
 
 set -Eeuo pipefail
 
-readonly REMOTE="origin"
-readonly MAIN_BRANCH="main"
-readonly DEV_BRANCH="dev"
-readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-readonly PROJECT_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
-readonly SETTINGS_FILE="$PROJECT_DIR/conf/settings.cfg"
+# Project settings: keep adaptations to other Python projects in this block.
+readonly project_name="BMCA"
+readonly version_file="bmca/constants/DBMCA.py"
+readonly version_constant="VERSION"
+readonly codename_constant="CMDB_CODENAME"
+readonly changelog_file="CHANGELOG.md"
+readonly remote="origin"
+readonly dev_branch="dev"
+readonly main_branch="main"
+readonly feature_prefix="feat/maint-"
+readonly python_command="python3"
+# Enable both settings after following Deployment Impact Tracking.
+readonly dependency_rules=""
+readonly deployment_config=""
+readonly cmdb_checker="scripts/check-cmdb.py"
 
-CURRENT_BRANCH=""
-PROJECT_NAME=""
-NEW_VERSION=""
-RELEASE_MESSAGE=""
-NEXT_FEATURE_BRANCH=""
-RELEASE_BRANCH=""
-TAG_NAME=""
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 
-if [[ -t 1 ]]; then
-    readonly RED=$'\033[0;31m'
-    readonly GREEN=$'\033[0;32m'
-    readonly YELLOW=$'\033[1;33m'
-    readonly BLUE=$'\033[0;34m'
-    readonly NC=$'\033[0m'
-else
-    readonly RED='' GREEN='' YELLOW='' BLUE='' NC=''
-fi
+version_number='(0|[1-9][0-9]*)'
+prerelease_identifier='(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)'
+version_pattern="^${version_number}\.${version_number}\.${version_number}(-${prerelease_identifier}(\.${prerelease_identifier})*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$"
+active_step="initialization"
 
-info()    { printf '%s[INFO]%s %s\n' "$BLUE" "$NC" "$*"; }
-success() { printf '%s[SUCCESS]%s %s\n' "$GREEN" "$NC" "$*"; }
-warn()    { printf '%s[WARNING]%s %s\n' "$YELLOW" "$NC" "$*"; }
-error()   { printf '%s[ERROR]%s %s\n' "$RED" "$NC" "$*" >&2; }
-die()     { error "$*"; exit 1; }
+status() {
+    local label=$1 color="" reset=""
+    shift
+    if [[ -t 1 && -z ${NO_COLOR+x} && ${TERM:-} != dumb ]]; then
+        case ${label} in
+            PASSED) color=$'\033[32m' ;;
+            FAIL) color=$'\033[31m' ;;
+            WARNING) color=$'\033[33m' ;;
+        esac
+        reset=$'\033[0m'
+    fi
+    printf '[ %s%s%s ] %s\n' "${color}" "${label}" "${reset}" "$*"
+}
+
+fail() {
+    status FAIL "$*" >&2
+    exit 1
+}
+
+on_error() {
+    local code=$1
+    status FAIL "Stopped during ${active_step} (exit ${code}). Inspect the Git state before retrying." >&2
+    exit "${code}"
+}
+trap 'on_error "$?"' ERR
+
+step() {
+    active_step=$1
+    shift
+    "$@"
+    status PASSED "${active_step}"
+}
+
+# Read literal constants without importing project code. Update only their values,
+# preserving annotations, comments, indentation, and the rest of the file.
+project_metadata() {
+    "${python_command}" - "${version_file}" "${version_constant}" "${codename_constant}" "$@" <<'PY'
+import ast
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+keys = sys.argv[2:4]
+mode = sys.argv[4]
+source = path.read_bytes()
+tree = ast.parse(source, filename=str(path))
+values = []
+for key in keys:
+    matches = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.AnnAssign):
+            targets = [node.target]
+        elif isinstance(node, ast.Assign):
+            targets = node.targets
+        else:
+            continue
+        if any(isinstance(target, ast.Name) and target.id == key for target in targets):
+            if len(targets) != 1:
+                sys.exit(f"{key} must have its own assignment.")
+            matches.append(node.value)
+    if len(matches) != 1:
+        sys.exit(f"{path} must contain exactly one {key} assignment.")
+    value = matches[0]
+    if not isinstance(value, ast.Constant) or not isinstance(value.value, str):
+        sys.exit(f"{key} must be a literal string.")
+    if value.lineno != value.end_lineno:
+        sys.exit(f"{key} must be a single-line literal string.")
+    values.append(value)
+
+if mode == "read":
+    print(values[0].value)
+elif mode == "update":
+    lines = source.splitlines(keepends=True)
+    # Work backwards so replacements on the same line retain their offsets.
+    replacements = sorted(zip(values, sys.argv[5:7]), key=lambda item: (
+        item[0].lineno, item[0].col_offset), reverse=True)
+    for node, text in replacements:
+        index = node.lineno - 1
+        literal = json.dumps(text, ensure_ascii=False).encode("utf-8")
+        lines[index] = lines[index][:node.col_offset] + literal + lines[index][node.end_col_offset:]
+    updated = b"".join(lines)
+    ast.parse(updated, filename=str(path))
+    path.write_bytes(updated)
+else:
+    sys.exit(f"Unknown metadata operation: {mode}")
+PY
+}
+
+# Keep PEP 621 package metadata in step with the literal application VERSION.
+# A tool-only pyproject.toml (no [project]) has nothing to synchronize.
+package_metadata() {
+    [[ -f pyproject.toml ]] || return 0
+    "${python_command}" - "pyproject.toml" "$@" <<'PY'
+import pathlib
+import re
+import sys
+
+path = pathlib.Path(sys.argv[1])
+mode = sys.argv[2]
+old_version = sys.argv[3]
+new_version = sys.argv[4] if len(sys.argv) == 5 else None
+lines = path.read_bytes().splitlines(keepends=True)
+project_seen = False
+in_project = False
+matches = []
+section = re.compile(rb'^[ \t]*\[([^\]\r\n]+)\][ \t]*(?:\#[^\r\n]*)?(?:\r?\n)?$')
+assignment = re.compile(rb'^[ \t]*version[ \t]*=')
+version_line = re.compile(rb'^([ \t]*version[ \t]*=[ \t]*)(["\'])([^"\'\r\n]*)(["\'])([ \t]*(?:\#[^\r\n]*)?)(\r?\n?)$')
+for index, line in enumerate(lines):
+    header = section.fullmatch(line)
+    if header:
+        in_project = header.group(1).strip() == b'project'
+        if in_project:
+            if project_seen:
+                sys.exit('Duplicate [project] table in pyproject.toml')
+            project_seen = True
+        continue
+    if in_project and assignment.match(line):
+        match = version_line.fullmatch(line)
+        if match is None or match.group(2) != match.group(4):
+            sys.exit('Unsupported [project].version: expected a literal quoted string')
+        matches.append((index, match))
+if not project_seen:
+    sys.exit(0)  # Tool-only pyproject.toml, no package metadata.
+if len(matches) != 1:
+    sys.exit('pyproject.toml [project] must define exactly one literal version')
+index, match = matches[0]
+value = match.group(3).decode('utf-8')
+if value != old_version:
+    sys.exit(f'Package version {value!r} differs from application VERSION {old_version!r}')
+if mode == 'update':
+    if not new_version:
+        sys.exit('Missing new package version')
+    encoded = new_version.encode('utf-8')
+    lines[index] = (match.group(1) + match.group(2) + encoded + match.group(4)
+                    + match.group(5) + match.group(6))
+    path.write_bytes(b''.join(lines))
+elif mode != 'check':
+    sys.exit(f'Unknown package metadata operation: {mode}')
+PY
+}
+
+current_version() {
+    local value
+    value=$(project_metadata read) || fail "Cannot read ${project_name} release constants."
+    [[ ${value} =~ ${version_pattern} ]] || fail "Cannot read a single valid ${project_name} version."
+    package_metadata check "${value}" || fail "pyproject.toml version is incompatible with ${project_name} VERSION."
+    printf '%s\n' "${value}"
+}
 
 usage() {
-    local example_version="0.1.0"
-    local example_message="Release v0.1.0"
-    local example_branch="feat/maint-0.1.1"
-
-    if [[ ${1:-} == current && -f "$SETTINGS_FILE" ]]; then
-        local current_version
-        current_version=$(sed -nE 's/^PROJECT_VERSION="([^"]+)"$/\1/p' "$SETTINGS_FILE")
-        if [[ "$current_version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
-            local major=${BASH_REMATCH[1]}
-            local minor=${BASH_REMATCH[2]}
-            local release_patch=$((10#${BASH_REMATCH[3]} + 1))
-            local maintenance_patch=$((release_patch + 1))
-            example_version="$major.$minor.$release_patch"
-            example_message="Release v$example_version"
-            example_branch="feat/maint-$major.$minor.$maintenance_patch"
-        fi
+    local branch likely_version major minor patch next_version installed_version
+    branch=$(git branch --show-current)
+    if [[ ${branch} =~ (^|[/_-])v?([0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?)$ ]]; then
+        likely_version=${BASH_REMATCH[2]}
+    else
+        installed_version=$(current_version) || return 1
+        IFS=. read -r major minor patch <<< "${installed_version%%[-+]*}"
+        likely_version="${major}.${minor}.$((10#${patch} + 1))"
     fi
+    IFS=. read -r major minor patch <<< "${likely_version%%[-+]*}"
+    next_version="${major}.${minor}.$((10#${patch} + 1))"
 
-    cat <<EOF
-Usage: $(basename -- "$0") <version> <release-message> <next-feature-branch>
+    cat <<HELP
+Usage: $(basename -- "$0") <version> <message> [next-feature-branch]
+
+Current branch: ${branch}
+Likely next version: ${likely_version}
 
 Example:
-  $(basename -- "$0") $example_version "$example_message" $example_branch
+  $(basename -- "$0") ${likely_version} "Maintenance release"
 
-The script must be run from a clean feat/* or feature/* branch. It fetches
-$REMOTE, validates the release refs, asks for confirmation, performs the
-release merges, updates conf/settings.cfg and CHANGELOG.md, and atomically
-pushes main, dev, the release branch, and tag.
-EOF
-}
+Next feature branch: ${feature_prefix}${next_version}
 
-require_command() {
-    command -v "$1" >/dev/null 2>&1 || die "Required command not found: $1"
-}
+Run from a clean feature branch with local ${dev_branch} and ${main_branch} up to date.
+Use a version without a leading v. The next branch defaults to
+${feature_prefix}<version with patch incremented>.
+Committed files must differ from ${main_branch}; empty commits do not qualify.
 
-ref_exists() {
-    git show-ref --verify --quiet "$1"
+After interactive confirmation, updates ${version_constant}, ${codename_constant}
+in ${version_file}, ${changelog_file}, and any PEP 621 [project].version in
+pyproject.toml, then merges through ${dev_branch} to
+${main_branch}, tags and pushes the release, then creates the next local feature
+branch. Records deployment impact when the optional deployment settings are enabled.
+The message becomes the codename. Requires Git and ${python_command}.
+HELP
 }
 
 validate_arguments() {
-    [[ $# -eq 3 ]] || { usage >&2; exit 2; }
-
-    NEW_VERSION=$1
-    RELEASE_MESSAGE=$2
-    NEXT_FEATURE_BRANCH=$3
-    RELEASE_BRANCH="release/v$NEW_VERSION"
-    TAG_NAME="v$NEW_VERSION"
-
-    [[ "$NEW_VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z][0-9A-Za-z.-]*)?(\+[0-9A-Za-z][0-9A-Za-z.-]*)?$ ]] ||
-        die "Version must be a semantic version without a leading v (for example, 0.1.0)."
-    [[ -n "$RELEASE_MESSAGE" ]] || die "Release message must not be empty."
-    [[ "$NEXT_FEATURE_BRANCH" == feat/* || "$NEXT_FEATURE_BRANCH" == feature/* ]] ||
-        die "Next feature branch must start with feat/ or feature/."
-
-    git check-ref-format --branch "$RELEASE_BRANCH" >/dev/null ||
-        die "Invalid release branch name: $RELEASE_BRANCH"
-    git check-ref-format --branch "$NEXT_FEATURE_BRANCH" >/dev/null ||
-        die "Invalid feature branch name: $NEXT_FEATURE_BRANCH"
+    version=$1
+    [[ ${version} =~ ${version_pattern} ]] || fail "Use a version such as 0.0.1, without a leading v."
+    [[ -n ${2//[[:space:]]/} ]] || fail "A release message is required."
+    description=$2
+    message="Release ${version}: ${description}"
+    tag="v${version}"
+    local major minor patch
+    IFS=. read -r major minor patch <<< "${version%%[-+]*}"
+    next_branch=${3:-"${feature_prefix}${major}.${minor}.$((10#${patch} + 1))"}
 }
 
-preflight() {
-    require_command git
-    git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "Not inside a Git repository."
-    [[ "$(git rev-parse --show-toplevel)" == "$PROJECT_DIR" ]] ||
-        die "Run this script from the bmca repository."
-    git remote get-url "$REMOTE" >/dev/null 2>&1 || die "Git remote '$REMOTE' is not configured."
-
-    CURRENT_BRANCH=$(git branch --show-current)
-    [[ -n "$CURRENT_BRANCH" ]] || die "Detached HEAD; switch to a feature branch first."
-    [[ "$CURRENT_BRANCH" == feat/* || "$CURRENT_BRANCH" == feature/* ]] ||
-        die "Current branch must start with feat/ or feature/ (currently '$CURRENT_BRANCH')."
-    [[ -z "$(git status --porcelain)" ]] || {
-        git status --short >&2
-        die "Working tree is not clean; commit or stash changes before releasing."
-    }
-
-    [[ -f "$SETTINGS_FILE" ]] || die "conf/settings.cfg is required for a release."
-    local current_version
-    PROJECT_NAME=$(sed -nE 's/^PROJECT_NAME="([^"]+)"$/\1/p' "$SETTINGS_FILE")
-    current_version=$(sed -nE 's/^PROJECT_VERSION="([^"]+)"$/\1/p' "$SETTINGS_FILE")
-    [[ -n "$PROJECT_NAME" ]] ||
-        die "PROJECT_NAME is missing or invalid in conf/settings.cfg."
-    [[ "$current_version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z][0-9A-Za-z.-]*)?(\+[0-9A-Za-z][0-9A-Za-z.-]*)?$ ]] ||
-        die "PROJECT_VERSION in conf/settings.cfg is missing or invalid: $current_version"
-    [[ "$current_version" != "$NEW_VERSION" ]] ||
-        die "PROJECT_VERSION is already $NEW_VERSION; choose a new release version."
-
-    if git grep -I -n -E -- '-----BEGIN (ENCRYPTED |RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----' -- .; then
-        die "A private-key PEM marker was found in tracked files; remove the secret before releasing."
+check_changelog() {
+    [[ $(grep -c '^## \[Unreleased\]$' "${changelog_file}") == 1 ]] ||
+        fail "${changelog_file} must contain exactly one ## [Unreleased] heading."
+    if grep -Fq "## [${version}]" "${changelog_file}"; then
+        fail "Version ${version} is already in ${changelog_file}."
     fi
+}
 
-    if git ls-files | grep -E '(^|/)(password|passphrase)(\.[^/]*)?$' >&2; then
-        die "A likely password/passphrase file is tracked; remove it before releasing."
+preflight_local() {
+    source_branch=$(git branch --show-current)
+    [[ -n ${source_branch} && ${source_branch} != "${dev_branch}" && ${source_branch} != "${main_branch}" ]] ||
+        fail "Run from a feature branch."
+    [[ -z $(git status --porcelain) ]] || fail "Commit or stash all changes before releasing."
+    git remote get-url "${remote}" >/dev/null || fail "Missing Git remote ${remote}."
+    git check-ref-format --branch "${next_branch}" >/dev/null || fail "Invalid next feature branch."
+    [[ ${next_branch} != -* && ${next_branch} != '@{-'* ]] || fail "Use a literal next feature branch name."
+    if git show-ref --verify --quiet "refs/heads/${next_branch}"; then
+        fail "Next feature branch already exists."
     fi
-
-    ref_exists "refs/heads/$MAIN_BRANCH" || die "Local branch '$MAIN_BRANCH' does not exist."
-    ref_exists "refs/heads/$DEV_BRANCH" || die "Local branch '$DEV_BRANCH' does not exist."
-
-    info "Fetching release refs from $REMOTE..."
-    git fetch --prune "$REMOTE"
-
-    ref_exists "refs/remotes/$REMOTE/$MAIN_BRANCH" ||
-        die "Remote branch '$REMOTE/$MAIN_BRANCH' does not exist."
-    [[ "$(git rev-parse "$MAIN_BRANCH")" == "$(git rev-parse "$REMOTE/$MAIN_BRANCH")" ]] ||
-        die "Local '$MAIN_BRANCH' differs from '$REMOTE/$MAIN_BRANCH'; reconcile it first."
-
-    if ref_exists "refs/remotes/$REMOTE/$DEV_BRANCH"; then
-        [[ "$(git rev-parse "$DEV_BRANCH")" == "$(git rev-parse "$REMOTE/$DEV_BRANCH")" ]] ||
-            die "Local '$DEV_BRANCH' differs from '$REMOTE/$DEV_BRANCH'; reconcile it first."
+    local branch
+    for branch in "${dev_branch}" "${main_branch}"; do
+        git show-ref --verify --quiet "refs/heads/${branch}" || fail "Missing local ${branch} branch."
+    done
+    local diff_status
+    if git diff --quiet --no-ext-diff --no-textconv "refs/heads/${main_branch}" HEAD --; then
+        fail "No files have changed compared with ${main_branch}; nothing to release."
     else
-        warn "Remote '$REMOTE/$DEV_BRANCH' does not exist; this release will create it."
+        diff_status=$?
+        [[ ${diff_status} == 1 ]] || fail "Could not compare release files with ${main_branch}."
     fi
+    local lifecycle_script
+    local lifecycle_scripts=(scripts/install.sh scripts/upgrade.sh scripts/uninstall.sh)
+    for lifecycle_script in "${lifecycle_scripts[@]}"; do
+        [[ -x ${lifecycle_script} ]] || fail "Missing executable ${lifecycle_script}."
+        bash -n "${lifecycle_script}" || fail "Invalid shell syntax in ${lifecycle_script}."
+    done
+    git ls-files --error-unmatch "${version_file}" "${changelog_file}" "${cmdb_checker}" \
+        "${lifecycle_scripts[@]}" >/dev/null ||
+        fail "Release constants, changelog, metadata checker, and lifecycle scripts must be committed."
+    "${python_command}" -B "${cmdb_checker}" --name "${project_name}" --codename="${description}" \
+        --release-version="${version}" "${version_file}"
+    current_version >/dev/null
+    check_changelog
+}
 
-    ! ref_exists "refs/heads/$RELEASE_BRANCH" || die "Local branch '$RELEASE_BRANCH' already exists."
-    ! ref_exists "refs/remotes/$REMOTE/$RELEASE_BRANCH" || die "Remote branch '$REMOTE/$RELEASE_BRANCH' already exists."
-    ! ref_exists "refs/tags/$TAG_NAME" || die "Tag '$TAG_NAME' already exists locally."
-    ! git ls-remote --exit-code --tags "$REMOTE" "refs/tags/$TAG_NAME" >/dev/null 2>&1 ||
-        die "Tag '$TAG_NAME' already exists on '$REMOTE'."
-    ! ref_exists "refs/heads/$NEXT_FEATURE_BRANCH" || die "Local branch '$NEXT_FEATURE_BRANCH' already exists."
-    ! ref_exists "refs/remotes/$REMOTE/$NEXT_FEATURE_BRANCH" ||
-        die "Remote branch '$REMOTE/$NEXT_FEATURE_BRANCH' already exists."
-
-    git merge-base --is-ancestor "$MAIN_BRANCH" "$DEV_BRANCH" ||
-        die "'$DEV_BRANCH' does not contain '$MAIN_BRANCH'; reconcile the branches first."
+preflight_remote() {
+    if git show-ref --verify --quiet "refs/tags/${tag}"; then
+        fail "Tag ${tag} already exists."
+    fi
+    if git show-ref --verify --quiet "refs/remotes/${remote}/${next_branch}"; then
+        fail "Next feature branch already exists on ${remote}."
+    fi
+    local branch
+    for branch in "${dev_branch}" "${main_branch}"; do
+        if git show-ref --verify --quiet "refs/remotes/${remote}/${branch}"; then
+            git merge-base --is-ancestor "${remote}/${branch}" "${branch}" ||
+                fail "Local ${branch} is behind or diverged from ${remote}/${branch}; update it first."
+        else
+            status WARNING "Remote ${remote}/${branch} is absent and will be created."
+        fi
+    done
+    git merge-base --is-ancestor "${main_branch}" "${dev_branch}" || fail "Merge ${main_branch} into ${dev_branch} before releasing."
+    git merge-base --is-ancestor "${dev_branch}" "${source_branch}" || fail "Merge ${dev_branch} into the feature branch before releasing."
 }
 
 confirm_release() {
-    printf '\nRelease summary:\n'
-    printf '  Project:       %s\n' "$PROJECT_NAME"
-    printf '  Source:        %s\n' "$CURRENT_BRANCH"
-    printf '  Release:       %s (%s)\n' "$RELEASE_BRANCH" "$TAG_NAME"
-    printf '  Next branch:   %s\n' "$NEXT_FEATURE_BRANCH"
-    printf '  Remote:        %s\n\n' "$(git remote get-url "$REMOTE")"
+    printf '\n%s release summary:\n' "${project_name}"
+    printf '  Source:       %s\n' "${source_branch}"
+    printf '  Tag:          %s\n' "${tag}"
+    printf '  Message:      %s\n' "${message}"
+    printf '  Codename:     %s\n' "${description}"
+    printf '  Next branch:  %s\n' "${next_branch}"
+    printf '  Remote:       %s\n\n' "$(git remote get-url "${remote}")"
 
-    [[ -t 0 ]] || die "Confirmation requires an interactive terminal."
-    read -r -p "Create and push this release? [y/N] " reply
-    [[ "$reply" == y || "$reply" == Y ]] || { warn "Release cancelled."; exit 0; }
-}
-
-merge_no_ff() {
-    local source=$1 message=$2
-    info "Merging '$source' into '$(git branch --show-current)'..."
-    git merge --no-ff "$source" -m "$message"
-}
-
-update_changelog() {
-    local changelog="$PROJECT_DIR/CHANGELOG.md"
-    local release_date release_heading temp_file
-
-    [[ -f "$changelog" ]] || die "CHANGELOG.md is required for a release."
-    grep -Fxq '## [Unreleased]' "$changelog" ||
-        die "CHANGELOG.md does not contain the required '## [Unreleased]' heading."
-
-    release_date=$(date '+%Y-%m-%d %H:%M %Z')
-    release_heading="## [Release $NEW_VERSION] - $release_date"
-    temp_file=$(mktemp "$PROJECT_DIR/.CHANGELOG.md.XXXXXX")
-
-    if ! awk -v release_heading="$release_heading" '
-        /^## \[Unreleased\]$/ {
-            print
-            print ""
-            print release_heading
-            next
-        }
-        { print }
-    ' "$changelog" >"$temp_file"; then
-        rm -f -- "$temp_file"
-        die "Failed to update CHANGELOG.md."
+    [[ -t 0 ]] || fail "Confirmation requires an interactive terminal."
+    local reply
+    if ! read -r -p "Create and push this release? [y/N] " reply; then
+        reply=""
     fi
-
-    chmod --reference="$changelog" "$temp_file"
-    mv -- "$temp_file" "$changelog"
-    git add -- CHANGELOG.md
-    success "Updated CHANGELOG.md for $TAG_NAME."
-}
-
-update_project_version() {
-    local temp_file
-    temp_file=$(mktemp "$PROJECT_DIR/conf/.settings.cfg.XXXXXX")
-
-    if ! awk -v version="$NEW_VERSION" '
-        /^PROJECT_VERSION="[^"]+"$/ {
-            print "PROJECT_VERSION=\"" version "\""
-            next
-        }
-        { print }
-    ' "$SETTINGS_FILE" >"$temp_file"; then
-        rm -f -- "$temp_file"
-        die "Failed to update PROJECT_VERSION in conf/settings.cfg."
+    if [[ ${reply} != y && ${reply} != Y ]]; then
+        status WARNING "Release cancelled."
+        exit 0
     fi
-
-    chmod --reference="$SETTINGS_FILE" "$temp_file"
-    mv -- "$temp_file" "$SETTINGS_FILE"
-    git add -- conf/settings.cfg
-    success "Updated PROJECT_VERSION to $NEW_VERSION."
 }
 
-create_release() {
-    git switch "$DEV_BRANCH"
-    merge_no_ff "$CURRENT_BRANCH" "Merge $CURRENT_BRANCH into $DEV_BRANCH for $TAG_NAME"
+update_release_files() {
+    local previous_version
+    previous_version=$(current_version)
+    check_changelog
+    package_metadata update "${previous_version}" "${version}" || fail "Could not synchronize pyproject.toml version."
+    project_metadata update "${version}" "${description}"
+    local release_date
+    release_date=$(date '+%Y-%m-%d @ %H:%M')
+    sed -i "/^## \[Unreleased\]$/a\\
+\\
+## [${version}] - ${release_date}" "${changelog_file}"
+    git add -- "${version_file}" "${changelog_file}"
+    if [[ -f pyproject.toml ]]; then
+        git add -- pyproject.toml
+    fi
+    if [[ -n ${deployment_config} ]]; then
+        release_deployment prepare "${previous_version}" "${version}"
+        git add -- "$(release_deployment manifest)"
+    fi
+    git commit -m "${message}"
+}
 
-    git switch -c "$RELEASE_BRANCH"
-    update_project_version
-    update_changelog
-    git commit -m "Update release metadata for $TAG_NAME"
+release_deployment() {
+    "${python_command}" -B -m deployment_tools.release --config "${deployment_config}" "$@"
+}
 
-    git switch "$MAIN_BRANCH"
-    merge_no_ff "$RELEASE_BRANCH" "Release $TAG_NAME: $RELEASE_MESSAGE"
-    git tag -a "$TAG_NAME" -m "$RELEASE_MESSAGE"
-
-    git switch "$DEV_BRANCH"
-    merge_no_ff "$MAIN_BRANCH" "Merge $TAG_NAME back into $DEV_BRANCH"
-
-    info "Pushing release refs atomically..."
-    git push --atomic "$REMOTE" \
-        "refs/heads/$MAIN_BRANCH:refs/heads/$MAIN_BRANCH" \
-        "refs/heads/$DEV_BRANCH:refs/heads/$DEV_BRANCH" \
-        "refs/heads/$RELEASE_BRANCH:refs/heads/$RELEASE_BRANCH" \
-        "refs/tags/$TAG_NAME:refs/tags/$TAG_NAME"
-
-    git switch -c "$NEXT_FEATURE_BRANCH"
+check_deployment() {
+    if [[ -n ${dependency_rules} || -n ${deployment_config} ]]; then
+        [[ -n ${dependency_rules} && -n ${deployment_config} ]] ||
+            fail "Enable dependency_rules and deployment_config together."
+        "${python_command}" -B -m deployment_tools --rules "${dependency_rules}" --check
+        release_deployment check "$(current_version)"
+    fi
 }
 
 main() {
-    cd -- "$PROJECT_DIR"
-    if [[ ${1:-} == -h || ${1:-} == --help ]]; then usage; exit 0; fi
-    if [[ $# -eq 0 ]]; then usage current >&2; exit 2; fi
-    validate_arguments "$@"
-    preflight
-    confirm_release
-    create_release
-
-    success "Release $TAG_NAME was published successfully."
-    success "Now on new feature branch: $NEXT_FEATURE_BRANCH"
-    info "Deploy Paris from the signed-off Git tag '$TAG_NAME', not from a working branch."
+    command -v git >/dev/null || fail "Required command not found: git"
+    command -v "${python_command}" >/dev/null || fail "Required command not found: ${python_command}"
+    if [[ ${1:-} == -h || ${1:-} == --help ]]; then
+        usage
+        exit 0
+    fi
+    if [[ $# -lt 2 || $# -gt 3 ]]; then
+        usage >&2
+        exit 2
+    fi
+    step "Validate release arguments" validate_arguments "$@"
+    step "Check local release prerequisites" preflight_local
+    step "Check deployment dependencies" check_deployment
+    step "Fetch refs from ${remote}" git fetch --prune --tags "${remote}"
+    step "Check remote refs and branch ancestry" preflight_remote
+    step "Confirm release" confirm_release
+    step "Switch to ${dev_branch}" git switch "${dev_branch}"
+    step "Merge ${source_branch} into ${dev_branch}" git merge --no-ff "${source_branch}" -m "Merge ${source_branch} for ${tag}"
+    step "Check merged deployment dependencies" check_deployment
+    step "Update release constants and changelog" update_release_files
+    step "Switch to ${main_branch}" git switch "${main_branch}"
+    step "Merge ${dev_branch} into ${main_branch}" git merge --no-ff "${dev_branch}" -m "${message}"
+    step "Create annotated tag ${tag}" git tag -a "${tag}" -m "${message}"
+    step "Switch to ${dev_branch}" git switch "${dev_branch}"
+    step "Advance ${dev_branch} to ${main_branch}" git merge --ff-only "${main_branch}"
+    step "Push release refs atomically" git push --atomic "${remote}" \
+        "refs/heads/${main_branch}:refs/heads/${main_branch}" \
+        "refs/heads/${dev_branch}:refs/heads/${dev_branch}" \
+        "refs/tags/${tag}:refs/tags/${tag}"
+    step "Create next feature branch ${next_branch}" git switch -c "${next_branch}"
+    status PASSED "${project_name} release ${tag} published successfully."
 }
 
 main "$@"

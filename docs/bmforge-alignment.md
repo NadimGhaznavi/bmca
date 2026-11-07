@@ -49,9 +49,9 @@ ownership tombstone. Installation is a file operation, not a transactional
 rollback; a failed upgrade can leave replaced files while the successful-version
 marker remains unchanged.
 
-The current package version remains `1.0.1`; this phase does not publish a
-release. Legacy `scripts/new-release.sh` is not the release path for the new
-system. The canonical release integration is scheduled for phase 6.
+The current package version remains `1.0.1`; these implementation checkpoints do
+not publish a release. The release-tooling checkpoint below replaces the legacy
+script with the canonical release integration.
 
 See [Installation](installation.md) for the current payload and commands.
 
@@ -91,3 +91,19 @@ their corresponding later feature phase.
 `bash tests/test-all.sh`: 13 installation checks and 9 localization checks pass.
 The read-only installation check also passes. This checkpoint is ready for user
 review and commit. See [CLI localization](localization.md) for conventions.
+
+## Release-tooling checkpoint
+
+The release script now follows the pinned BMForge flow, reads literal version
+and codename fields from `DBMCA.py`, synchronizes optional package metadata, and
+promotes the existing unreleased changelog entries. It retains interactive
+publication and uses Git for branch/ref validation and atomic remote updates.
+
+As explicitly requested, a release is refused when Git reports no file changes
+between the committed feature branch and `main`. The comparison happens before
+generated metadata can introduce artificial changes. Empty commits and fully
+reverted changes are rejected as well.
+
+See [Releases](releases.md). Acceptance tests run only in disposable repositories
+with local bare remotes. This tooling checkpoint does not complete CA services or
+database implementation, publish a real release, or change project branches.
